@@ -1,0 +1,7 @@
+# 麒麟 V10 SP1 2503 的典型源组合。
+# 同一个 URI 同时提供 amd64/i386/arm64/loongarch64/mips64el 等架构。
+# 必须同时挂基础 suite 10.1-kylin；2503 是叠加更新层。
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503 main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-bugfix-limit main restricted universe multiverse
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all

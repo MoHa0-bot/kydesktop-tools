@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kylinpkg"
+dynamic = ["version"]
+description = "多源、多架构 deb 包与依赖离线下载器"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "mohao" }]
+keywords = ["kylin", "deb", "apt", "offline", "package"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: POSIX :: Linux",
+  "License :: OSI Approved :: MIT License",
+  "Environment :: X11 Applications",
+]
+
+[project.scripts]
+kylinpkg = "kylinpkg.cli:main"
+
+[project.gui-scripts]
+kylinpkg-gui = "kylinpkg.gui:main"
+
+[tool.setuptools]
+packages = ["kylinpkg"]
+
+[tool.setuptools.dynamic]
+version = { attr = "kylinpkg.__version__" }

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk xvfb apt-utils dpkg-dev
+
+      - name: Python version
+        run: python3 --version
+
+      - name: Compile
+        run: python3 -m compileall -q kylinpkg tests
+
+      - name: Unit and GUI smoke tests
+        run: xvfb-run -a python3 -m unittest discover -s tests -v
+
+      - name: Build deb
+        run: ./packaging/build-deb.sh
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: kylinpkg-deb
+          path: dist/*.deb
+          if-no-files-found: error

@@ -1,0 +1,437 @@
+"""内置 apt 源预设。
+
+数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》（26 个版本配置）。
+预设只是模板：创建成 profile 后可以自由查看、编辑。
+
+文档中几处需要归一/说明的地方：
+- `PART-10 1-kirin...` 是 OCR 空格，这里按 `PART-10.1-kirin...` 归一；
+- V10SP1-2303 普通版文档重复写了 universe，这里去重；
+- 16/17 条与 14/15 条在文档中完全相同，update2 的差异未体现；
+- 部分 Kirin/Pangwu 的 partner/suite 在当前公网镜像未验证到，源文件可随时编辑。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Sequence, Tuple
+
+from .util import KylinPkgError
+
+SOURCE_DOC = "银河麒麟桌面版软件源地址汇总.md"
+_ARCH_BASE = "http://archive.kylinos.cn/kylin/KYLIN-ALL"
+_ARCH_PARTNER = "http://archive.kylinos.cn/kylin/partner"
+_A2 = "http://archive2.kylinos.cn/deb/kylin/production"
+_PARTNER_SP1 = "http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1"
+
+_LEGACY_NOTE = (
+    "文档中的 partner 路径为 “PART-10 1-...” 形式（疑似 OCR 空格），"
+    "此预设按 “PART-10.1-...” 归一；若 404/签名失败，请在本工具的源配置编辑器里改成目标机实际地址。"
+)
+_KIRIN_NOTE = (
+    "Kirin/Pangwu 专用 partner/suite 未在当前公网镜像全部验证到；"
+    "若解析报 404，请用目标机实际源地址覆盖。"
+)
+_DUP_NOTE = "文档中该条与相邻条目相同，update2 的 suite 差异未体现；请以目标机实际源为准。"
+_2503_NOTE = (
+    "文档使用 10.1-2503-bugfix；部分镜像/机器上实际是 10.1-2503-bugfix-limit。"
+    "如果 apt 提示 suite 不存在，请编辑源文件改成实际 suite。"
+)
+
+
+@dataclass(frozen=True)
+class SourcePreset:
+    id: str
+    name: str
+    group: str
+    description: str
+    sources: Tuple[str, ...]
+    architectures: Tuple[str, ...] = ()
+    notes: Tuple[str, ...] = ()
+
+
+def _p(
+    preset_id: str,
+    name: str,
+    group: str,
+    description: str,
+    sources: Sequence[str],
+    architectures: Sequence[str] = (),
+    notes: Sequence[str] = (),
+) -> SourcePreset:
+    return SourcePreset(
+        id=preset_id,
+        name=name,
+        group=group,
+        description=description,
+        sources=tuple(sources),
+        architectures=tuple(architectures),
+        notes=tuple(notes),
+    )
+
+
+PRESETS: Tuple[SourcePreset, ...] = (
+    # ---------------------------------------------------------- V10 基础版
+    _p(
+        "v10-2107",
+        "V10-2107 / 2101.0710 等",
+        "V10 基础版",
+        "V10 非 SP1 早期版本",
+        [
+            "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s juniper main" % _ARCH_PARTNER,
+            "deb %s 10.0-fixs main" % _ARCH_BASE,
+        ],
+    ),
+    _p(
+        "v10-2203",
+        "V10-2203（X86_64 / ARM64 / MIPS64el）",
+        "V10 基础版",
+        "V10 非 SP1 2203",
+        [
+            "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s juniper main" % _ARCH_PARTNER,
+            "deb %s/PART-V10/custom/partner/V10 default all" % _A2,
+        ],
+        ("amd64", "arm64", "mips64el"),
+    ),
+    # ------------------------------------------------- V10 SP1 2107 / 0521
+    _p(
+        "sp1-2107-hwe",
+        "V10 SP1 2107 & 211217 HWE",
+        "V10 SP1 2107 / 0521",
+        "HWE 硬件启用栈",
+        [
+            "deb %s 10.1-hwe main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-hwe main" % _ARCH_PARTNER,
+        ],
+        notes=(
+            "当前公网镜像上 partner/10.1-hwe 返回 404；"
+            "若 apt update 失败，请编辑源文件按目标机实际地址修改。",
+        ),
+    ),
+    _p(
+        "sp1-2107-0521",
+        "V10 SP1 2107 & 211217 & 0521（多架构）",
+        "V10 SP1 2107 / 0521",
+        "2107 / 211217 / 0521 系列",
+        [
+            "deb %s 10.1 main universe multiverse restricted" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+        ("amd64", "arm64", "mips64el"),
+    ),
+    # ------------------------------------------------------- V10 SP1 2203
+    _p(
+        "sp1-2203",
+        "V10 SP1 2203（X86_64 / ARM64 / MIPS64el / LoongArch64）",
+        "V10 SP1 2203",
+        "2203 基础更新",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2203-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+        ("amd64", "arm64", "mips64el", "loongarch64"),
+    ),
+    _p(
+        "sp1-2203-hwe",
+        "V10 SP1 2203 HWE",
+        "V10 SP1 2203",
+        "2203 HWE 更新",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2203-hwe-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    # ------------------------------------------------------- V10 SP1 2303
+    _p(
+        "sp1-2303",
+        "V10 SP1 2303 & update2（普通版）",
+        "V10 SP1 2303",
+        "2303 普通版",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+        notes=("文档中 components 重复写了 universe，此预设已去重。",),
+    ),
+    _p(
+        "sp1-2303-hwe",
+        "V10 SP1 2303 HWE & update2",
+        "V10 SP1 2303",
+        "2303 HWE",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2303-hwe-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    _p(
+        "sp1-2303-hwe-pp",
+        "V10 SP1 2303 HWE-PP",
+        "V10 SP1 2303",
+        "2303 HWE + PP 分支",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2303-hwe-pp-updates main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    # --------------------------------------------------------- 海思麒麟
+    _p(
+        "sp1-kirin990-old",
+        "V10 SP1 海思麒麟 990（早期版）",
+        "海思麒麟（Kirin）",
+        "Kirin 990 早期",
+        [
+            "deb http://archive1.kylinos.cn/kylin/KYLIN-ALL 10.1-pv main restricted universe multiverse",
+            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin990/custom/partner/10.1-kirin990 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-kirin990-new",
+        "V10 SP1 海思麒麟 990（新版）",
+        "海思麒麟（Kirin）",
+        "Kirin 990 新版",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2203-kirin990",
+        "V10 SP1 2203 海思麒麟 990",
+        "海思麒麟（Kirin）",
+        "2203 + Kirin 990 feature",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2203-kirin9006c",
+        "V10 SP1 2203 海思麒麟 9006C",
+        "海思麒麟（Kirin）",
+        "2203 + Kirin 9006C feature",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin9006c-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2303-kirin990",
+        "V10 SP1 2303 海思麒麟 990",
+        "海思麒麟（Kirin）",
+        "2303 + Kirin 990 feature",
+        [
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-2303-feature main",
+            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2303-kirin9006c",
+        "V10 SP1 2303 海思麒麟 9006C",
+        "海思麒麟（Kirin）",
+        "2303 + Kirin 9006C feature",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2303u2-kirin9006c",
+        "V10 SP1 2303-update2 海思麒麟 9006C",
+        "海思麒麟（Kirin）",
+        "2303 update2 + Kirin 9006C（文档同 2303 条）",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE, _DUP_NOTE),
+    ),
+    _p(
+        "sp1-2303u2-kirin990",
+        "V10 SP1 2303-update2 海思麒麟 990",
+        "海思麒麟（Kirin）",
+        "2303 update2 + Kirin 990（文档同 2303 条）",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin990-2303-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE, _DUP_NOTE),
+    ),
+    _p(
+        "sp1-2403-kirin9000c",
+        "V10 SP1 2403 海思麒麟 9000C",
+        "海思麒麟（Kirin）",
+        "2403 Wayland + Kirin 9000C feature",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2403-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9000C-2403-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    # --------------------------------------------------------- 盘古
+    _p(
+        "sp1-2203-pangwu-m900",
+        "V10 SP1 2203 盘古 M900",
+        "盘古（Pangwu）",
+        "2203 Wayland + 盘古 M900",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-pangwu main universe restricted multiverse",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (_LEGACY_NOTE, _KIRIN_NOTE),
+    ),
+    _p(
+        "sp1-2303-pangwu-m900",
+        "V10 SP1 2303 盘古 M900",
+        "盘古（Pangwu）",
+        "2303 Wayland + 盘古 M900",
+        [
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirinM900-2303-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+        ],
+        ("arm64",),
+        (
+            _LEGACY_NOTE,
+            _KIRIN_NOTE,
+            "10.1-kirinM900-2303-feature 在当前公网镜像返回 404；请以目标机实际 suite 为准。",
+        ),
+    ),
+    # ------------------------------------------------------- V10 SP1 2403
+    _p(
+        "sp1-2403",
+        "V10 SP1 2403（基础版）",
+        "V10 SP1 2403",
+        "2403 基础版",
+        [
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-updates main restricted universe multiverse",
+        ],
+    ),
+    _p(
+        "sp1-2403-u1",
+        "V10 SP1 2403-update1",
+        "V10 SP1 2403",
+        "2403 update1",
+        [
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse",
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    _p(
+        "sp1-2403-hwe-u1",
+        "V10 SP1 2403 HWE & update1",
+        "V10 SP1 2403",
+        "2403 HWE + update1",
+        [
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-hwe-update1 main",
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    _p(
+        "sp1-2403-u2",
+        "V10 SP1 2403-update2",
+        "V10 SP1 2403",
+        "2403 update2",
+        [
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update2 main restricted universe multiverse",
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+    ),
+    # ------------------------------------------------------- V10 SP1 2503
+    _p(
+        "sp1-2503-hwe",
+        "V10 SP1 2503 HWE",
+        "V10 SP1 2503",
+        "2503 + HWE + bugfix",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-kylin-2503-hwe main" % _ARCH_BASE,
+            "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2503-hwe-bugfix main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s default all" % _PARTNER_SP1,
+        ],
+        notes=(_2503_NOTE,),
+    ),
+    _p(
+        "sp1-2503",
+        "V10 SP1 2503（普通版）",
+        "V10 SP1 2503",
+        "2503 普通版",
+        [
+            "deb %s default all" % _PARTNER_SP1,
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH_BASE,
+            "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH_BASE,
+        ],
+        notes=(_2503_NOTE,),
+    ),
+)
+
+PRESET_MAP: Dict[str, SourcePreset] = {preset.id: preset for preset in PRESETS}
+
+
+def get_preset(preset_id: str) -> SourcePreset:
+    preset = PRESET_MAP.get(preset_id)
+    if preset is None:
+        raise KylinPkgError(
+            "未知预设：%s（可用：%s）" % (preset_id, ", ".join(sorted(PRESET_MAP)))
+        )
+    return preset
+
+
+def list_presets(group: Optional[str] = None) -> List[SourcePreset]:
+    if group:
+        return [preset for preset in PRESETS if preset.group == group]
+    return list(PRESETS)
+
+
+def preset_text(preset: SourcePreset, include_notes: bool = True) -> str:
+    lines = list(preset.sources)
+    if include_notes and preset.notes:
+        lines.append("")
+        for note in preset.notes:
+            lines.append("# 注意：" + note)
+    return "\n".join(lines)

@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk apt-utils dpkg-dev
+
+      - name: Verify tag matches version
+        run: |
+          VERSION="$(python3 -c 'import kylinpkg; print(kylinpkg.__version__)')"
+          echo "package version: $VERSION"
+          echo "git tag:         ${GITHUB_REF_NAME}"
+          test "v${VERSION}" = "${GITHUB_REF_NAME}"
+
+      - name: Build deb
+        run: ./packaging/build-deb.sh
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.deb
+          fail_on_unmatched_files: true
+          generate_release_notes: true

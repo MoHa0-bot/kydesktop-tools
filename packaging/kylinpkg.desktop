@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=kylinpkg 离线包下载器
+Name[zh_CN]=kylinpkg 离线包下载器
+GenericName=Offline deb package downloader
+Comment=选择 apt 源配置和 dpkg 基线，下载 deb 包及依赖
+Comment[zh_CN]=选择 apt 源配置和 dpkg 基线，下载 deb 包及依赖
+Exec=/opt/kylinpkg/bin/kylinpkg-gui
+TryExec=/opt/kylinpkg/bin/kylinpkg-gui
+Path=/opt/kylinpkg
+Icon=kylinpkg
+Terminal=false
+Categories=System;PackageManager;
+Keywords=deb;apt;kylin;offline;package;download;
+Keywords[zh_CN]=deb;apt;麒麟;离线;软件包;下载;
+StartupNotify=true

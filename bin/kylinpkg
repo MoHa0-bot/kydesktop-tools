@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""直接从源码树运行 kylinpkg。"""
+
+import os
+import sys
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+from kylinpkg.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

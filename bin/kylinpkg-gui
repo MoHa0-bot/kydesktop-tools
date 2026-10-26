@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+"""直接从源码树启动 kylinpkg 图形界面。"""
+
+import os
+import sys
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+try:
+    from kylinpkg.gui import main
+except ImportError as exc:
+    sys.stderr.write(
+        "无法加载图形界面：%s\n"
+        "如果缺少 tkinter，请安装 python3-tk（或发行版对应的包）。\n" % exc
+    )
+    sys.exit(1)
+
+if __name__ == "__main__":
+    sys.exit(main())
