@@ -45,7 +45,8 @@ apt 求解"要装哪些包、下哪些包"时，输入是四类信息：
 不需要 root；以普通用户运行即可。状态目录默认 `~/.local/share/kylinpkg`。
 
 ```bash
-cd /home/mohao/kylinpkg
+git clone https://github.com/MoHa0-bot/kydesktop-tools.git
+cd kydesktop-tools
 ./bin/kylinpkg --version
 ./bin/kylinpkg doctor
 ```
@@ -54,11 +55,18 @@ cd /home/mohao/kylinpkg
 
 ## 安装 deb（推荐）
 
+从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
+
 ```bash
-cd /home/mohao/kylinpkg
+sudo apt install ./kylinpkg_0.2.0_all.deb
+# 或 sudo dpkg -i ./kylinpkg_0.2.0_all.deb && sudo apt -f install
+```
+
+也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
+
+```bash
 ./packaging/build-deb.sh
 sudo apt install ./dist/kylinpkg_0.2.0_all.deb
-# 或 sudo dpkg -i ./dist/kylinpkg_0.2.0_all.deb && sudo apt -f install
 ```
 
 安装后的路径：

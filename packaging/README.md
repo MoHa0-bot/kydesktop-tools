@@ -1,7 +1,7 @@
 # deb 打包
 
 ```bash
-cd /home/mohao/kylinpkg
+cd kydesktop-tools   # 仓库根目录
 ./packaging/build-deb.sh
 ```
 

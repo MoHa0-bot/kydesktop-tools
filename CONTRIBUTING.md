@@ -16,7 +16,7 @@ CHANGELOG.md          # 版本记录
 ## 本地开发
 
 ```bash
-cd /home/mohao/kylinpkg
+cd kydesktop-tools   # 仓库根目录
 
 ./bin/kylinpkg --version
 ./bin/kylinpkg doctor
