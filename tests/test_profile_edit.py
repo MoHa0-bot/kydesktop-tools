@@ -19,8 +19,16 @@ class ProfileEditTest(unittest.TestCase):
         self.sources.write_text(
             "deb [trusted=yes] file:%s ./\n" % self.repo, encoding="utf-8"
         )
+        # 显式提供 keyring，避免依赖宿主机的 /etc/apt/trusted.gpg
+        # （部分发行版已不再生成该文件，例如 Ubuntu 22.04 runner）
+        self.keyring = self.root / "trusted.gpg"
+        self.keyring.write_bytes(b"kylinpkg-test-keyring")
         profile.import_profile(
-            self.state, "p1", sources_files=[self.sources], architectures=["amd64"]
+            self.state,
+            "p1",
+            sources_files=[self.sources],
+            keyrings=[self.keyring],
+            architectures=["amd64"],
         )
 
     def tearDown(self):
