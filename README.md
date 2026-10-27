@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.3**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.2.4**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## apt 到底依赖哪些信息
@@ -58,14 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.3_all.deb
+sudo dpkg -i ./kylinpkg_0.2.4_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.3_all.deb
+sudo dpkg -i ./kylinpkg_0.2.4_all.deb
 ```
 
 安装后的路径：
@@ -200,7 +200,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 | V10 SP1 2203 | `sp1-2203`、`sp1-2203-hwe` |
 | V10 SP1 2303 | `sp1-2303`、`sp1-2303-hwe`、`sp1-2303-hwe-pp` |
 | 海思麒麟 | `sp1-kirin990-old`、`sp1-kirin990-new`、`sp1-2203-kirin990`、`sp1-2203-kirin9006c`、`sp1-2303-kirin990`、`sp1-2303-kirin9006c`、`sp1-2303u2-kirin9006c`、`sp1-2303u2-kirin990`、`sp1-2403-kirin9000c` |
-| 盘古 | `sp1-2203-pangwu-m900`、`sp1-2303-pangwu-m900` |
+| 海思麒麟 · 盘古（Pangwu） | `sp1-2203-pangwu-m900`、`sp1-2303-pangwu-m900` |
 | V10 SP1 2403 | `sp1-2403`、`sp1-2403-u1`、`sp1-2403-hwe-u1`、`sp1-2403-u2` |
 | V10 SP1 2503 | `sp1-2503-hwe`、`sp1-2503` |
 
@@ -215,8 +215,9 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 - 修正版源数据已无 OCR 空格，预设直接使用 `PART-10.1-kirin...` 路径；
 - 2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为目标主架构（amd64/arm64 已验证）；
+- 2403、2503 也统一使用“通用版”；Kirin 990 原“新版”按新文档改为“2107版”；
 - V10SP1-2303 通用版文档重复写了 `universe`，预设已去重；
-- 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，不是飞腾平台；
+- 盘古（Pangwu）是华为海思的另一款芯片产品线，ARM64 架构，不是飞腾平台；
   原始汇总表术语仍写“飞腾”，仓库 `docs/` 与预设使用已确认的华为海思说明；
 - 最新源数据将 Kirin partner/feature 路径更新为 `10_1-`/`PART-10_1-`；
   第 12 条按文档保留 `10.1-kirin9a0` 的 partner suite；

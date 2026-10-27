@@ -7,6 +7,18 @@
 
 - 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.4] - 2026-10-27
+
+### 变更
+
+- 同步最新修正版文档的命名：
+  - 2303 / 2403 / 2503 统一使用“通用版”；
+  - Kirin 990 原“新版”按新文档改为“2107版”；
+  - 盘古归入“海思麒麟 · 盘古（Pangwu）”分组。
+- 盘古术语更新为“华为海思的另一款芯片产品线，ARM64 架构，有专用版本分支”；
+- 源行仍为 26 个预设 / 88 条 `deb` 源行，地址无变化；
+- 版本号更新为 0.2.4，重新构建 deb。
+
 ## [0.2.3] - 2026-10-27
 
 ### 变更
@@ -146,7 +158,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.4
 [0.2.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.3
 [0.2.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.2
 [0.2.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.1

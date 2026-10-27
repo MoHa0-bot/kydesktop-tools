@@ -60,6 +60,12 @@ class PresetsTest(unittest.TestCase):
         self.assertNotIn("PART-10.1-kirin990", text)
         self.assertNotIn("PART-10 1-", text)
         self.assertEqual(kirin.architectures, ("arm64",))
+        self.assertIn("2107版", presets.get_preset("sp1-kirin990-new").name)
+        self.assertIn("通用版", presets.get_preset("sp1-2403").name)
+        self.assertEqual(
+            presets.get_preset("sp1-2203-pangwu-m900").group,
+            "海思麒麟 · 盘古（Pangwu）",
+        )
 
         # 第 12 条按文档保留 partner suite 的 10.1 路径
         kirin2203 = presets.get_preset("sp1-2203-kirin990")

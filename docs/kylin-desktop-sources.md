@@ -66,7 +66,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ## 四、V10 SP1 - 2303 系列
 
-### 7. V10SP1-2303 & update2（普通版）
+### 7. V10SP1-2303 & update2（通用版）
 
 ```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe universe multiverse
@@ -103,7 +103,7 @@ deb http://archive1.kylinos.cn/kylin/KYLIN-ALL 10.1-pv main restricted universe 
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin990/custom/partner/10_1-kirin990 default all
 ```
 
-### 11. V10SP1 - 海思麒麟990（新版）
+### 11. V10SP1 - 海思麒麟990（2107版）
 
 ```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse
@@ -175,7 +175,7 @@ deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/p
 
 ---
 
-## 六、V10 SP1 - 盘古（Pangwu）专用版本
+## 六、V10 SP1 - 海思麒麟 盘古（Pangwu）版本
 
 ### 19. V10SP1-2203 - 盘古M900
 
@@ -197,7 +197,7 @@ deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/p
 
 ## 七、V10 SP1 - 2403 系列
 
-### 21. V10SP1-2403（基础版）
+### 21. V10SP1-2403（通用版）
 
 ```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
@@ -245,7 +245,7 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-hwe-bugfix main restrict
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
 ```
 
-### 26. V10SP1-2503（普通版）
+### 26. V10SP1-2503（通用版）
 
 ```
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -267,8 +267,6 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-bugfix main restricted u
 | **feature** | 芯片/平台专属特性分支 |
 | **main / restricted / universe / multiverse** | Debian 软件仓库分类：main=官方免费软件，restricted=私有驱动，universe=社区维护，multiverse=版权受限软件 |
 | **海思麒麟（kirin）** | 针对华为海思芯片（990、9006C、9000C等）的专用版本 |
-| **盘古（pangwu）** | 华为海思芯片产品线，ARM64 架构 |
+| **盘古（pangwu）** | 针对华为海思的另外一款芯片，有专用版本分支 |
 
 ---
-
-> 整理自银河麒麟官方软件源对照表截图，共 4 张图片，26 个版本配置。10_1-kirin9a0

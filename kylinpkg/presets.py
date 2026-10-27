@@ -37,7 +37,7 @@ _KIRIN_NOTE = (
     "Kirin/Pangwu 专用 partner/suite 未在当前公网镜像全部验证到；"
     "若解析报 404，请用目标机实际源地址覆盖。"
 )
-_PANGWU_NOTE = "盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，预设按 arm64 处理。"
+_PANGWU_NOTE = "盘古（Pangwu）是华为海思的另一款芯片产品线，ARM64 架构，预设按 arm64 处理。"
 _DUP_NOTE = "文档中该条与相邻条目相同，update2 的 suite 差异未体现；请以目标机实际源为准。"
 _2503_NOTE = (
     "文档使用 10.1-2503-bugfix；部分镜像/机器上实际是 10.1-2503-bugfix-limit。"
@@ -206,9 +206,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
     ),
     _p(
         "sp1-kirin990-new",
-        "V10 SP1 海思麒麟 990（新版）",
+        "V10 SP1 海思麒麟 990（2107版）",
         "海思麒麟（Kirin）",
-        "Kirin 990 新版",
+        "Kirin 990 2107版",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse",
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
@@ -316,7 +316,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
     _p(
         "sp1-2203-pangwu-m900",
         "V10 SP1 2203 盘古 M900",
-        "盘古（Pangwu）",
+        "海思麒麟 · 盘古（Pangwu）",
         "2203 Wayland + 盘古 M900",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-pangwu main universe restricted multiverse",
@@ -328,7 +328,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
     _p(
         "sp1-2303-pangwu-m900",
         "V10 SP1 2303 盘古 M900",
-        "盘古（Pangwu）",
+        "海思麒麟 · 盘古（Pangwu）",
         "2303 Wayland + 盘古 M900",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
@@ -346,9 +346,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
     # ------------------------------------------------------- V10 SP1 2403
     _p(
         "sp1-2403",
-        "V10 SP1 2403（基础版）",
+        "V10 SP1 2403（通用版）",
         "V10 SP1 2403",
-        "2403 基础版",
+        "2403 通用版",
         [
             "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all",
