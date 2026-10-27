@@ -56,9 +56,17 @@ class PresetsTest(unittest.TestCase):
 
         kirin = presets.get_preset("sp1-kirin990-old")
         text = "\n".join(kirin.sources)
-        self.assertIn("PART-10.1-kirin990", text)
+        self.assertIn("PART-10_1-kirin990", text)
+        self.assertNotIn("PART-10.1-kirin990", text)
         self.assertNotIn("PART-10 1-", text)
         self.assertEqual(kirin.architectures, ("arm64",))
+
+        # 第 12 条按文档保留 partner suite 的 10.1 路径
+        kirin2203 = presets.get_preset("sp1-2203-kirin990")
+        text = "\n".join(kirin2203.sources)
+        self.assertIn("PART-10_1-kirin9a0", text)
+        self.assertIn("partner/10.1-kirin9a0", text)
+        self.assertIn("10_1-kirin990-feature", text)
 
     def test_create_from_preset(self):
         with tempfile.TemporaryDirectory(prefix="kylinpkg-preset-test-") as tmp:

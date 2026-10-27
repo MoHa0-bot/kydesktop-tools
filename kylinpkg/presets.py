@@ -8,6 +8,8 @@
 
 文档中几处需要归一/说明的地方：
 - V10SP1-2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为主架构；
+- 最新修正版将 Kirin partner/feature 路径更新为 `10_1-`/`PART-10_1-`；
+  第 12 条按文档保留 `10.1-kirin9a0` 的 partner suite；
 - V10SP1-2303 通用版文档重复写了 universe，这里去重；
 - 16/17 条与 14/15 条在文档中完全相同，update2 的差异未体现；
 - 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，预设按 arm64 处理；
@@ -197,7 +199,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "Kirin 990 早期",
         [
             "deb http://archive1.kylinos.cn/kylin/KYLIN-ALL 10.1-pv main restricted universe multiverse",
-            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin990/custom/partner/10.1-kirin990 default all",
+            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin990/custom/partner/10_1-kirin990 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -209,7 +211,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "Kirin 990 新版",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -221,8 +223,8 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "2203 + Kirin 990 feature",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10_1-kirin990-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -235,7 +237,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin9006c-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -248,8 +250,8 @@ PRESETS: Tuple[SourcePreset, ...] = (
         [
             "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-2303-feature main",
-            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL/ 10_1-kirin990-2303-feature main",
+            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -263,7 +265,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -277,7 +279,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE, _DUP_NOTE),
@@ -290,8 +292,8 @@ PRESETS: Tuple[SourcePreset, ...] = (
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin990-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10_1-kirin990-2303-feature main",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE, _DUP_NOTE),
@@ -305,7 +307,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2403-updates main universe restricted multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9000C-2403-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE,),
@@ -318,7 +320,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "2203 Wayland + 盘古 M900",
         [
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-pangwu main universe restricted multiverse",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (_KIRIN_NOTE, _PANGWU_NOTE),
@@ -332,7 +334,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
             "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirinM900-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
+            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
         ],
         ("arm64",),
         (

@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.2**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.2.3**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## apt 到底依赖哪些信息
@@ -58,14 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.2_all.deb
+sudo dpkg -i ./kylinpkg_0.2.3_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.2_all.deb
+sudo dpkg -i ./kylinpkg_0.2.3_all.deb
 ```
 
 安装后的路径：
@@ -217,6 +217,9 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 - 2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为目标主架构（amd64/arm64 已验证）；
 - V10SP1-2303 通用版文档重复写了 `universe`，预设已去重；
 - 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，不是飞腾平台；
+  原始汇总表术语仍写“飞腾”，仓库 `docs/` 与预设使用已确认的华为海思说明；
+- 最新源数据将 Kirin partner/feature 路径更新为 `10_1-`/`PART-10_1-`；
+  第 12 条按文档保留 `10.1-kirin9a0` 的 partner suite；
 - 第 16/17 条与第 14/15 条在文档中完全相同，update2 的差异未体现；
 - 部分 Kirin/Pangwu partner、`10.1-kirinM900-2303-feature`、`partner/10.1-hwe`
   在当前公网镜像上未验证到（404/超时）；预设会保留文档地址并带警告，

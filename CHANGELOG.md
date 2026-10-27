@@ -7,6 +7,18 @@
 
 - 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.3] - 2026-10-27
+
+### 变更
+
+- 按最新修正版源汇总重新同步 26 个预设 / 88 条 `deb` 源行；
+- Kirin/Pangwu 相关 partner/feature 路径由 `10.1-`/`PART-10.1-`
+  更新为 `10_1-`/`PART-10_1-`；
+- 第 12 条按修正版文档保留 `10.1-kirin9a0` 的 partner suite；
+- 保留盘古（Pangwu）= 华为海思 / ARM64 的已确认说明；修正版文档术语表
+  仍写“飞腾”，仓库 `docs/` 与预设继续使用已确认版本；
+- 版本号更新为 0.2.3，重新构建 deb。
+
 ## [0.2.2] - 2026-10-27
 
 ### 修复
@@ -134,7 +146,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.3
 [0.2.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.2
 [0.2.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.0
