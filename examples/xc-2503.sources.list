@@ -1,0 +1,8 @@
+# 麒麟 V10 SP1 XC-2503（产线通用版）的典型外网源组合。
+# 同一个 URI 同时提供 amd64/arm64/loongarch64/mips64el 等架构。
+# 必须同时挂基础 suite 10.1-kylin；2503 是叠加更新层，bugfix-limit 是限定修复层。
+# 该版本还配套 /etc/apt/preferences.d/kylin.pref 优先级，见预设 xc-2503。
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-bugfix-limit main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503 main restricted universe multiverse
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all

@@ -5,7 +5,38 @@
 
 ## [Unreleased]
 
-- 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
+- 计划中：下载并发/断点续传、图形化 SSH 导入。
+
+## [0.2.6] - 2026-10-27
+
+### 源预设按官方外网源清单整体重建
+
+- 数据源换成《银河麒麟桌面外网源.xls》（在线推送使用的正式源，外网），
+  取代已过时的《银河麒麟桌面版软件源地址汇总.md》；纯文本副本写入
+  `docs/kylin-desktop-sources.md`。
+- 预设从 26 个 / 88 条源行扩到 **42 个 / 208 条源行**，按 xls 的产线划分：
+  XC 通用版 6、HWE 硬件启用栈 10、Wayland 24（麒麟 990 / 9006C / 9000C、
+  盘古 M900、华为 Pangux·Flemingx·Panguy·Panguw），另保留 V10 非 SP1 历史预设 2 条。
+- 预设 ID 改为产线命名 `xc-*` / `hwe-*` / `wl-*`，旧的 `sp1-*` ID 全部移除
+  （破坏性变更，见 README“与旧版源汇总的差异”）。
+- 2503 的 bugfix suite 按 xls 统一为 `10.1-2503-bugfix-limit`；
+  新增 `*-update3`、`10.1-2403-wayland-*` 等 suite。
+- HWE 源不再使用 `archive2` 的 `KY-V10-SP1-$(ARCH)` 桌面源，`$(ARCH)` 占位逻辑随之移除。
+
+### 新增：预设自带的 apt 优先级配置
+
+- `SourcePreset` 增加 `preferences` 字段，收录 xls 中 11 条配置的
+  `/etc/apt/preferences.d/kylin.pref`（`Pin-Priority`）。
+- `profile.create_from_preset()` 在有 `preferences` 时写入 profile 的
+  `preferences.d/kylin.pref`，并追加一条警告提示核对 Pin-Priority 与本机版本。
+- `preset_text()` 输出优先级段落；GUI 预设列表新增“优先级”列，
+  详情头里显示是否带 `kylin.pref`。
+- 测试新增优先级落盘校验；`test_presets.py` 的 26/88 硬编码更新为 42/208。
+
+### 其他
+
+- `examples/sp1-2503.sources.list` 改名并按新源更新为 `examples/xc-2503.sources.list`。
+- 版本号更新为 0.2.6。
 
 ## [0.2.5] - 2026-10-27
 

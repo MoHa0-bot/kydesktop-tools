@@ -879,16 +879,17 @@ class App:
         tree_frame.columnconfigure(0, weight=1)
         tree = ttk.Treeview(
             tree_frame,
-            columns=("group", "id", "name", "arch"),
+            columns=("group", "id", "name", "arch", "pin"),
             show="headings",
             height=9,
             selectmode="browse",
         )
         for col, head, width in (
-            ("group", "分组", 170),
-            ("id", "ID", 190),
-            ("name", "名称", 400),
-            ("arch", "预设架构", 180),
+            ("group", "分组", 165),
+            ("id", "ID", 180),
+            ("name", "名称", 380),
+            ("arch", "预设架构", 165),
+            ("pin", "优先级", 70),
         ):
             tree.heading(col, text=head)
             tree.column(col, width=width, minwidth=80, stretch=True)
@@ -906,6 +907,7 @@ class App:
                     preset.id,
                     preset.name,
                     ",".join(preset.architectures) or "自动",
+                    "有" if preset.preferences else "-",
                 ),
             )
 
@@ -963,13 +965,14 @@ class App:
                 return
             preset = presets_mod.get_preset(selection[0])
             header = (
-                "ID：%s\n名称：%s\n分组：%s\n说明：%s\n预设架构：%s\n\n"
+                "ID：%s\n名称：%s\n分组：%s\n说明：%s\n预设架构：%s\n优先级配置：%s\n\n"
                 % (
                     preset.id,
                     preset.name,
                     preset.group,
                     preset.description,
                     ", ".join(preset.architectures) or "自动/按机器",
+                    "有（preferences.d/kylin.pref）" if preset.preferences else "无",
                 )
             )
             preview.configure(state="normal")

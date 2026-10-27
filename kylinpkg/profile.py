@@ -703,10 +703,30 @@ def create_from_preset(
             for note in preset.notes:
                 lines.append("# 注意：" + note)
         atomic_write_text(pdir / "sources.list", "\n".join(lines) + "\n", 0o600)
+        if preset.preferences:
+            pref_lines = [
+                "# kylinpkg preset: %s" % preset.id,
+                "# %s" % preset.name,
+                "# source: %s" % SOURCE_DOC,
+                "# 对应 /etc/apt/preferences.d/kylin.pref，可在 GUI 或 "
+                "kylinpkg profile edit 中修改",
+                "",
+            ]
+            pref_lines.extend(preset.preferences)
+            atomic_write_text(
+                pdir / "preferences.d" / "kylin.pref",
+                "\n".join(pref_lines) + "\n",
+                0o600,
+            )
         key_count = _copy_keyrings_from_apt(Path("/etc/apt"), pdir)
         if key_count == 0:
             extra_warnings.append(
                 "没有找到可复制的 keyring；若源未设置 trusted=yes，apt update 会因签名失败"
+            )
+        if preset.preferences:
+            extra_warnings.append(
+                "预设自带 apt 优先级配置，已写入 preferences.d/kylin.pref；"
+                "Pin-Priority 会影响包版本选择，请确认与本机系统版本匹配"
             )
         _write_meta(
             pdir,

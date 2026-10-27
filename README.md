@@ -58,14 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.5_all.deb
+sudo dpkg -i ./kylinpkg_0.2.6_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.5_all.deb
+sudo dpkg -i ./kylinpkg_0.2.6_all.deb
 ```
 
 安装后的路径：
@@ -169,67 +169,75 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   （原基线是 amd64 时不能绑定到 arm64 profile）。
 - 更多细节见 `collector/README.md`。
 
-## 内置源预设（26 个）
+## 内置源预设（42 个）
 
-数据解析自 `docs/kylin-desktop-sources.md`（原始文件：
-`~/下载/银河麒麟桌面版软件源地址汇总.md`），已内置到 `kylinpkg/presets.py`。
+数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，
+纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。
+共 42 个预设 / 208 条 `deb` 源行，其中 11 条附带 `kylin.pref` 优先级配置。
 
 ```bash
 # 查看全部预设
 ./bin/kylinpkg preset list
 
 # 查看某个预设的源地址和注意事项
-./bin/kylinpkg preset show sp1-2503
+./bin/kylinpkg preset show xc-2503
 
 # 从预设创建一个可编辑的 profile
-./bin/kylinpkg preset create sp1-2503 --profile sp1-2503 --arch amd64
+./bin/kylinpkg preset create xc-2503 --profile xc-2503 --arch amd64
 # 也可以直接绑定已有 baseline
-./bin/kylinpkg preset create sp1-2503 --profile sp1-2503 \
-  --arch amd64 --baseline sp1-2503-default
+./bin/kylinpkg preset create xc-2503 --profile xc-2503 \
+  --arch amd64 --baseline xc-2503-default
 ```
 
 图形界面：源配置面板点 **“从预设创建”**，左侧选预设、右侧看源预览，
-填写名称/架构/基线后创建。
+填写名称/架构/基线后创建；列表里“优先级”一列标出哪些预设带 `kylin.pref`。
 
-预设分组：
+预设分组（按 xls 的产线版本划分）：
 
-| 分组 | ID |
-| --- | --- |
-| V10 基础版 | `v10-2107`、`v10-2203` |
-| V10 SP1 2107 / 0521 | `sp1-2107-hwe`、`sp1-2107-0521` |
-| V10 SP1 2203 | `sp1-2203`、`sp1-2203-hwe` |
-| V10 SP1 2303 | `sp1-2303`、`sp1-2303-hwe`、`sp1-2303-hwe-pp` |
-| 海思麒麟 | `sp1-kirin990-old`、`sp1-kirin990-new`、`sp1-2203-kirin990`、`sp1-2203-kirin9006c`、`sp1-2303-kirin990`、`sp1-2303-kirin9006c`、`sp1-2303u2-kirin9006c`、`sp1-2303u2-kirin990`、`sp1-2403-kirin9000c` |
-| 海思麒麟 · 盘古（Pangwu） | `sp1-2203-pangwu-m900`、`sp1-2303-pangwu-m900` |
-| V10 SP1 2403 | `sp1-2403`、`sp1-2403-u1`、`sp1-2403-hwe-u1`、`sp1-2403-u2` |
-| V10 SP1 2503 | `sp1-2503-hwe`、`sp1-2503` |
+| 分组 | 数量 | ID |
+| --- | --- | --- |
+| XC 产线（通用版） | 6 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503` |
+| HWE 硬件启用栈 | 10 | `hwe-2107`、`hwe-2203`、`hwe-2303`、`hwe-2303u2`、`hwe-2403u2`、`hwe-2503`、`hwe-pp-2303`、`hwe-pp-2303u2`、`hwe-pp-2403u2`、`hwe-pp-2503` |
+| Wayland · 麒麟 990 | 6 | `wl-2107-990`、`wl-2203-990`、`wl-2303-990`、`wl-2303u2-990`、`wl-2403u2-990`、`wl-2503-990` |
+| Wayland · 麒麟 9006C | 6 | `wl-2107-9006c`、`wl-2203-9006c`、`wl-2303-9006c`、`wl-2303u2-9006c`、`wl-2403u2-9006c`、`wl-2503-9006c` |
+| Wayland · 盘古 M900（Pangwu） | 3 | `wl-2303u2-m900`、`wl-2403u2-m900`、`wl-2503-m900` |
+| Wayland · 麒麟 9000C | 6 | `wl-2403-9000c`、`wl-2403u1-9000c`、`wl-2403u2-9000c`、`wl-2503-9000c`、`wl-pangux-a-2403`、`wl-pangux-b` |
+| Wayland · 华为其他平台 | 3 | `wl-flemingx`、`wl-panguy`、`wl-2107-panguw` |
+| V10 基础版（非 SP1，历史） | 2 | `v10-2107`、`v10-2203` |
 
 架构缺省规则：
 
-- 预设只对应单一平台（Kirin/Pangwu）时用该架构（`arm64`）；
+- 预设只对应单一平台（Wayland/Kirin/盘古）时用该架构（`arm64`）；
 - 预设列出多个架构时，优先选本机架构（例如 amd64 机器选 `amd64`）；
 - 预设没有架构标注时，用本机 dpkg 架构；
 - 始终可以用 `--arch` 或 GUI 下拉框覆盖。
 
-### 文档里的几处修正/说明
+### 2503 系列的优先级配置
 
-- 修正版源数据已无 OCR 空格，预设直接使用 `PART-10.1-kirin...` 路径；
-- 2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为目标主架构（amd64/arm64 已验证）；
-- 2403、2503 也统一使用“通用版”；Kirin 990 原“新版”按新文档改为“2107版”；
-- V10SP1-2303 通用版文档重复写了 `universe`，预设已去重；
-- 盘古（Pangwu）是华为海思的另一款芯片产品线，ARM64 架构，不是飞腾平台；
-  原始汇总表术语仍写“飞腾”，仓库 `docs/` 与预设使用已确认的华为海思说明；
-- 最新源数据将 Kirin partner/feature 路径更新为 `10_1-`/`PART-10_1-`；
-  第 12 条按文档保留 `10.1-kirin9a0` 的 partner suite；
-- 第 16/17 条与第 14/15 条在文档中完全相同，update2 的差异未体现；
-- 部分 Kirin/Pangwu partner、`10.1-kirinM900-2303-feature`、`partner/10.1-hwe`
-  在当前公网镜像上未验证到（404/超时）；预设会保留文档地址并带警告，
-  创建后可在源配置编辑器里改成目标机实际地址；
-- 2503 预设在文档中写 `10.1-2503-bugfix`，部分机器实际是
-  `10.1-2503-bugfix-limit`，预设带注释提醒。
+2503 各产线（`xc-2503`、`hwe-2503`、`hwe-pp-2503`、以及 Wayland 2503 各芯片分支）
+和华为 Pangux/Flemingx/Panguy 平台在 xls 里附带了
+`/etc/apt/preferences.d/kylin.pref` 的 `Pin-Priority` 设置。
+这些预设带有 `preferences` 字段，创建 profile 时会自动写进
+`preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。
+创建后可在“查看/编辑源配置”里直接修改。
+
+### 与旧版源汇总的差异
+
+旧的《银河麒麟桌面版软件源地址汇总.md》已过时，本次按 xls 整体重建：
+
+- 预设 ID 全部改为 xls 的产线命名（`xc-*` / `hwe-*` / `wl-*`），
+  旧的 `sp1-*` ID 不再存在；
+- 2503 的 bugfix suite 以 xls 为准统一为 `10.1-2503-bugfix-limit`
+  （旧文档写的 `10.1-2503-bugfix` 已被取代）；
+- 新增 `*-bugfix-limit`、`*-update3`（2303 update2 的更新层）、
+  `10.1-2403-wayland-*` 系列 suite；
+- 新增 HWE-PP、盘古 M900、麒麟 9000C、华为 Pangux/Flemingx/Panguy/Panguw 等产线；
+- HWE 源不再使用 `archive2` 的 `KY-V10-SP1-$(ARCH)` 桌面源，改用 `KYLIN-ALL` 的
+  `*-hwe-updates` / `*-hwe-bugfix-limit`；
+- 只保留 2 条 V10 非 SP1（10.0 系）历史预设，新清单不再收录它们。
 
 每次修改 `docs/kylin-desktop-sources.md` 后运行测试，
-`tests/test_presets.py` 会逐行校验预设与文档一致（允许重复组件归一）。
+`tests/test_presets.py` 会逐行校验预设与文档一致。
 
 ## 查看和编辑源配置
 

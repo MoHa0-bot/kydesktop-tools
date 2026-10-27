@@ -2,20 +2,20 @@
 # Copyright (c) 2026 mohao
 """内置 apt 源预设。
 
-数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》修正版：
-26 个版本配置、88 条 `deb` 源行（2026-10-27 按修正版重新解析并逐行核对）。
-预设只是模板：创建成 profile 后可以自由查看、编辑。
-`docs/kylin-desktop-sources.md` 保存修正版原文，`tests/test_presets.py`
-会校验预设源行与文档一致。
+数据来自用户提供的《银河麒麟桌面外网源.xls》（在线推送使用的正式源，外网），
+共 40 条产线配置：XC 通用版、HWE 硬件启用栈、Wayland（麒麟 990 / 9006C / 9000C /
+盘古 M900 / 华为 Pangux·Flemingx·Panguy·Panguw）。其中 11 条附带的
+`/etc/apt/preferences.d/kylin.pref` 优先级（Pin-Priority）也一并收入，`preferences`
+字段会在创建 profile 时写进 `preferences.d/kylin.pref`。
 
-文档中几处需要归一/说明的地方：
-- V10SP1-2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为主架构；
-- 最新修正版将 Kirin partner/feature 路径更新为 `10_1-`/`PART-10_1-`；
-  第 12 条按文档保留 `10.1-kirin9a0` 的 partner suite；
-- V10SP1-2303 通用版文档重复写了 universe，这里去重；
-- 16/17 条与 14/15 条在文档中完全相同，update2 的差异未体现；
-- 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，预设按 arm64 处理；
-- 部分 Kirin/Pangwu 的 partner/suite 在当前公网镜像未验证到，源文件可随时编辑。
+另外保留 2 条 V10 非 SP1（10.0 系）历史预设——新的外网源清单不再收录它们，
+仅用于老机器。
+
+预设只是模板：创建成 profile 后可以自由查看、编辑。
+`docs/kylin-desktop-sources.md` 保存原始清单，`tests/test_presets.py` 会校验
+预设源行与清单一致。
+
+总计：42 个预设 / 208 条 `deb` 源行 / 11 条带优先级配置。
 """
 
 from __future__ import annotations
@@ -25,26 +25,14 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from .util import KylinPkgError
 
-SOURCE_DOC = "银河麒麟桌面版软件源地址汇总.md"
-_ARCH_BASE = "http://archive.kylinos.cn/kylin/KYLIN-ALL"
-_ARCH_PARTNER = "http://archive.kylinos.cn/kylin/partner"
-_A2 = "http://archive2.kylinos.cn/deb/kylin/production"
-_PARTNER_SP1 = "http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1"
-_KY_DESKTOP = (
-    "http://archive2.kylinos.cn/deb/kylin/production/"
-    "KY-V10-SP1-$(ARCH)/custom/kylin-desktop/V10-SP1-$(ARCH)"
-)
+SOURCE_DOC = "银河麒麟桌面外网源.xls（docs/kylin-desktop-sources.md）"
 
-_KIRIN_NOTE = (
-    "Kirin/Pangwu 专用 partner/suite 未在当前公网镜像全部验证到；"
-    "若解析报 404，请用目标机实际源地址覆盖。"
-)
-_PANGWU_NOTE = "盘古（Pangwu）是华为海思的另一款芯片产品线，ARM64 架构，预设按 arm64 处理。"
-_DUP_NOTE = "文档中该条与相邻条目相同，update2 的 suite 差异未体现；请以目标机实际源为准。"
-_2503_NOTE = (
-    "文档使用 10.1-2503-bugfix；部分镜像/机器上实际是 10.1-2503-bugfix-limit。"
-    "如果 apt 提示 suite 不存在，请编辑源文件改成实际 suite。"
-)
+_ARCH = "http://archive.kylinos.cn/kylin/KYLIN-ALL"
+_ARCHS = "https://archive.kylinos.cn/kylin/KYLIN-ALL"
+_PARTNER = "http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1"
+_KIRIN9A0S = "https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0"
+_KIRIN9A0 = "http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0"
+_KIRIN990 = "http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin990/custom/partner/10_1-kirin990"
 
 
 @dataclass(frozen=True)
@@ -54,6 +42,7 @@ class SourcePreset:
     group: str
     description: str
     sources: Tuple[str, ...]
+    preferences: Tuple[str, ...] = ()
     architectures: Tuple[str, ...] = ()
     notes: Tuple[str, ...] = ()
 
@@ -64,6 +53,7 @@ def _p(
     group: str,
     description: str,
     sources: Sequence[str],
+    preferences: Sequence[str] = (),
     architectures: Sequence[str] = (),
     notes: Sequence[str] = (),
 ) -> SourcePreset:
@@ -73,354 +63,972 @@ def _p(
         group=group,
         description=description,
         sources=tuple(sources),
+        preferences=tuple(preferences),
         architectures=tuple(architectures),
         notes=tuple(notes),
     )
 
 
 PRESETS: Tuple[SourcePreset, ...] = (
-    # ---------------------------------------------------------- V10 基础版
+    # ------------------------------------------------------------
+    # XC 产线（通用版）
+    _p(
+        "xc-2107",
+        "V10 SP1 XC-2107",
+        "XC 产线（通用版）",
+        "XC 2107 通用版外网正式源",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2107-updates main" % _ARCH,
+            "deb %s 10.1-2107-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+    ),
+    _p(
+        "xc-2203",
+        "V10 SP1 XC-2203",
+        "XC 产线（通用版）",
+        "XC 2203 通用版外网正式源",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2203-updates-preview main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2203-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+    ),
+    _p(
+        "xc-2303",
+        "V10 SP1 XC-2303",
+        "XC 产线（通用版）",
+        "XC 2303 通用版外网正式源",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+    ),
+    _p(
+        "xc-2303u2",
+        "V10 SP1 XC-2303-update2",
+        "XC 产线（通用版）",
+        "XC 2303 update2 外网正式源",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update3 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update2-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+    ),
+    _p(
+        "xc-2403u2",
+        "V10 SP1 XC-2403-update2",
+        "XC 产线（通用版）",
+        "XC 2403 update2 外网正式源",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-update2 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+    ),
+    _p(
+        "xc-2503",
+        "V10 SP1 XC-2503",
+        "XC 产线（通用版）",
+        "XC 2503 外网正式源（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2503-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+        notes=("该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",)
+    ),
+    # ---------------------------------------------------------------
+    # HWE 硬件启用栈
+    _p(
+        "hwe-2107",
+        "V10 SP1 HWE-2107",
+        "HWE 硬件启用栈",
+        "HWE 2107 硬件启用栈",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-hwe main" % _ARCH,
+            "deb %s 10.1-2107-hwe-updates main" % _ARCH,
+            "deb %s 10.1-2107-hwe-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-2203",
+        "V10 SP1 HWE-2203",
+        "HWE 硬件启用栈",
+        "HWE 2203 硬件启用栈",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2203-hwe-updates-preview main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2203-hwe-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-2303",
+        "V10 SP1 HWE-2303",
+        "HWE 硬件启用栈",
+        "HWE 2303 硬件启用栈",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-hwe-updates main universe multiverse restricted" % _ARCH,
+            "deb %s 10.1-2303-hwe-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-2303u2",
+        "V10 SP1 HWE-2303-update2",
+        "HWE 硬件启用栈",
+        "HWE 2303 update2 硬件启用栈",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update3 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update2-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-hwe-update3 main" % _ARCH,
+            "deb %s 10.1-2303-hwe-update2-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-2403u2",
+        "V10 SP1 HWE-2403-update2",
+        "HWE 硬件启用栈",
+        "HWE 2403 update2 硬件启用栈",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-update2 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-hwe-update2 main universe multiverse restricted" % _ARCH,
+            "deb %s 10.1-2403-hwe-bugfix-limit main" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-2503",
+        "V10 SP1 HWE-2503",
+        "HWE 硬件启用栈",
+        "HWE 2503（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2503-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+            "deb %s 10.1-2503-hwe-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-hwe main" % _ARCH,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-hwe",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-hwe-bugfix-limit",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("amd64", "arm64"),
+        notes=("该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",)
+    ),
+    _p(
+        "hwe-pp-2303",
+        "V10 SP1 HWE-PP-2303",
+        "HWE 硬件启用栈",
+        "HWE-PP 2303 分支",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-hwe-pp-updates main" % _ARCH,
+            "deb %s 10.1-2303-hwe-pp-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-pp-2303u2",
+        "V10 SP1 HWE-PP-2303-update2",
+        "HWE 硬件启用栈",
+        "HWE-PP 2303 update2 分支",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update3 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-update2-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-hwe-pp-update3 main" % _ARCH,
+            "deb %s 10.1-2303-hwe-pp-update2-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-pp-2403u2",
+        "V10 SP1 HWE-PP-2403-update2",
+        "HWE 硬件启用栈",
+        "HWE-PP 2403 update2 分支",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-update2 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2403-hwe-pp-update2 main" % _ARCH,
+            "deb %s 10.1-2403-hwe-pp-bugfix-limit main" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        architectures=("amd64", "arm64"),
+    ),
+    _p(
+        "hwe-pp-2503",
+        "V10 SP1 HWE-PP-2503",
+        "HWE 硬件启用栈",
+        "HWE-PP 2503（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2503-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+            "deb %s 10.1-2503-hwe-pp-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-hwe-pp main" % _ARCH,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-hwe-pp",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-hwe-pp-bugfix-limit",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("amd64", "arm64"),
+        notes=("该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",)
+    ),
+    # --------------------------------------------------------------
+    # Wayland · 麒麟 990
+    _p(
+        "wl-2107-990",
+        "Wayland 2107 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2107 Kirin 990",
+        [
+            "deb %s 10.1-pv main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2107-wayland-kirin990-bugfix-limit main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN990,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2203-990",
+        "Wayland 2203 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2203 Kirin 990",
+        [
+            "deb %s 10.1-wayland-2203-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin990-feature main" % _ARCHS,
+            "deb %s 10.1-2203-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2203-wayland-kirin990-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2303-990",
+        "Wayland 2303 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2303 Kirin 990",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-wayland-2303-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin990-2303-feature main" % _ARCHS,
+            "deb %s 10.1-2303-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-kirin990-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2303u2-990",
+        "Wayland 2303-update2 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2303 update2 Kirin 990",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update3 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update3-kirin990 main" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update2-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update2-kirin990-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2403u2-990",
+        "Wayland 2403-update2 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2403 update2 Kirin 990",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirin990 main" % _ARCHS,
+            "deb %s 10.1-2403-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-kirin990-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2503-990",
+        "Wayland 2503 · 麒麟 990",
+        "Wayland · 麒麟 990",
+        "Wayland 2503 Kirin 990（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-2503-wayland-bugfix-limit main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin990 main" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin990-bugfix main universe restricted multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-wayland-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin990",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin990-bugfix",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    # -------------------------------------------------------------
+    # Wayland · 麒麟 9006C
+    _p(
+        "wl-2107-9006c",
+        "Wayland 2107 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2107 Kirin 9006C",
+        [
+            "deb %s default all" % _KIRIN9A0S,
+            "deb %s 10.1-2107-wayland-kirin9006c-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-kv main restricted universe multiverse" % _ARCHS,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2203-9006c",
+        "Wayland 2203 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2203 Kirin 9006C",
+        [
+            "deb %s 10.1-2203-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2203-wayland-kirin9006c-bugfix-limit main" % _ARCHS,
+            "deb %s 10.1-kirin9006C-feature main" % _ARCHS,
+            "deb %s 10.1-wayland-2203-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2303-9006c",
+        "Wayland 2303 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2303 Kirin 9006C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-wayland-2303-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin9006C-2303-feature main" % _ARCHS,
+            "deb %s 10.1-2303-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-kirin9006c-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2303u2-9006c",
+        "Wayland 2303-update2 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2303 update2 Kirin 9006C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update3 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update3-kirin9006C main" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update2-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update2-kirin9006c-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2403u2-9006c",
+        "Wayland 2403-update2 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2403 update2 Kirin 9006C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirin9006C main" % _ARCHS,
+            "deb %s 10.1-2403-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-kirin9006c-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2503-9006c",
+        "Wayland 2503 · 麒麟 9006C",
+        "Wayland · 麒麟 9006C",
+        "Wayland 2503 Kirin 9006C（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-2503-wayland-bugfix-limit main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin9006C main" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin9006C-bugfix main universe restricted multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-wayland-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin9006C",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin9006C-bugfix",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    # -------------------------------------------------------
+    # Wayland · 盘古 M900（Pangwu）
+    _p(
+        "wl-2303u2-m900",
+        "Wayland 2303-update2 · 盘古 M900",
+        "Wayland · 盘古 M900（Pangwu）",
+        "Wayland 2303 update2 盘古 M900",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-wayland-update3 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2303-wayland-update3-m900 main" % _ARCH,
+            "deb %s 10.1-2303-wayland-update2-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2303-wayland-update2-kirinM900-bugfix-limit main" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        architectures=("arm64",),
+        notes=(
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+            "源清单中 http / https 混用，按原始清单保留；若某条不通可单独改成另一种协议。",
+        ),
+    ),
+    _p(
+        "wl-2403u2-m900",
+        "Wayland 2403-update2 · 盘古 M900",
+        "Wayland · 盘古 M900（Pangwu）",
+        "Wayland 2403 update2 盘古 M900",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirinM900 main" % _ARCHS,
+            "deb %s 10.1-2403-wayland-bugfix-limit main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-kirinM900-bugfix-limit main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2503-m900",
+        "Wayland 2503 · 盘古 M900",
+        "Wayland · 盘古 M900（Pangwu）",
+        "Wayland 2503 盘古 M900（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-2503-wayland-bugfix-limit main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirinM900 main" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirinM900-bugfix main universe restricted multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-wayland-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirinM900",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirinM900-bugfix",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    # -------------------------------------------------------------
+    # Wayland · 麒麟 9000C
+    _p(
+        "wl-2403-9000c",
+        "Wayland 2403 · 麒麟 9000C",
+        "Wayland · 麒麟 9000C",
+        "Wayland 2403 Kirin 9000C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-wayland-2403-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin9000C-2403-feature main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2403u1-9000c",
+        "Wayland 2403-update1 · 麒麟 9000C",
+        "Wayland · 麒麟 9000C",
+        "Wayland 2403 update1 Kirin 9000C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update1 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update1-kirin9000C main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2403u2-9000c",
+        "Wayland 2403-update2 · 麒麟 9000C",
+        "Wayland · 麒麟 9000C",
+        "Wayland 2403 update2 Kirin 9000C",
+        [
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirin9000C main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    _p(
+        "wl-2503-9000c",
+        "Wayland 2503 · 麒麟 9000C",
+        "Wayland · 麒麟 9000C",
+        "Wayland 2503 Kirin 9000C（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-2503-wayland-bugfix-limit main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin9000C main" % _ARCH,
+            "deb %s 10.1-kylin-2503-wayland-kirin9000C-bugfix main universe restricted multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-wayland-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin9000C",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503-wayland-kirin9000C-bugfix",
+            "Pin-Priority: 700",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 600",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    _p(
+        "wl-pangux-a-2403",
+        "Wayland 2403 · 华为 Pangux-a",
+        "Wayland · 麒麟 9000C",
+        "华为 Pangux-a 2403（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kirin9000C-2403-feature-bugfix-limit main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin9000C-2403-feature main" % _ARCHS,
+            "deb %s 10.1-wayland-2403-updates main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-wayland-2403-updates",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kirin9000C-2403-feature-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kirin9000C-2403-feature",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    _p(
+        "wl-pangux-b",
+        "Wayland · 华为 Pangux-b",
+        "Wayland · 麒麟 9000C",
+        "华为 Pangux-b（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kirin9000C-2403-feature-bugfix-limit main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin9000C-b-2403-feature main" % _ARCHS,
+            "deb %s 10.1-wayland-2403-updates main universe restricted multiverse" % _ARCH,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _KIRIN9A0,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-wayland-2403-updates",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kirin9000C-2403-feature-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kirin9000C-b-2403-feature",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    # ----------------------------------------------------------
+    # Wayland · 华为其他平台
+    _p(
+        "wl-flemingx",
+        "Wayland · 华为 Flemingx",
+        "Wayland · 华为其他平台",
+        "华为 Flemingx（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-2403-wayland-update2-kirin9000C-pre-bugfix-limit main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirin9000C-pre main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2-kirin9000C-pre",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2-kirin9000C-pre-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    _p(
+        "wl-panguy",
+        "Wayland · 华为 Panguy（麒麟 9000X）",
+        "Wayland · 华为其他平台",
+        "华为 Panguy / Kirin 9000X（含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-2403-wayland-update2-kirin9000X-bugfix-limit main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2 main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-2403-wayland-update2-kirin9000X main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2-kirin9000X",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2403-wayland-update2-kirin9000X-bugfix-limit",
+            "Pin-Priority: 600",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+            "feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",
+        ),
+    ),
+    _p(
+        "wl-2107-panguw",
+        "Wayland 2107 · 华为 Panguw",
+        "Wayland · 华为其他平台",
+        "华为 Panguw 2107（10.1-pw）",
+        [
+            "deb %s 10.1-pw main restricted universe multiverse" % _ARCH,
+        ],
+        architectures=("arm64",),
+        notes=("feature / bugfix-limit 均为芯片专属 suite，只适用于对应机型。",)
+    ),
+    # -------------------------------------------------------
+    # V10 基础版（非 SP1，历史）
     _p(
         "v10-2107",
-        "V10-2107 / 2101.0710 等",
-        "V10 基础版",
-        "V10 非 SP1",
+        "V10-2107 / 2101 / 0710 等（旧版，非 SP1）",
+        "V10 基础版（非 SP1，历史）",
+        "V10 非 SP1（10.0 系）历史源",
         [
-            "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s juniper main" % _ARCH_PARTNER,
-            "deb %s 10.0-fixs main" % _ARCH_BASE,
+            "deb %s 10.0 main restricted universe multiverse" % _ARCH,
+            "deb http://archive.kylinos.cn/kylin/partner juniper main",
+            "deb %s 10.0-fixs main" % _ARCH,
         ],
+        notes=("来自旧版《银河麒麟桌面版软件源地址汇总》；新外网源清单（XC / HWE / Wayland）不再收录 V10 非 SP1（10.0 系），仅在老机器上参考。",)
     ),
     _p(
         "v10-2203",
-        "V10-2203（X86_64 / ARM64 / MIPS64el）",
-        "V10 基础版",
-        "V10 非 SP1",
+        "V10-2203（X86_64 / ARM64 / MIPS64el，旧版，非 SP1）",
+        "V10 基础版（非 SP1，历史）",
+        "V10 非 SP1（10.0 系）历史源",
         [
-            "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s juniper main" % _ARCH_PARTNER,
-            "deb %s/PART-V10/custom/partner/V10 default all" % _A2,
+            "deb %s 10.0 main restricted universe multiverse" % _ARCH,
+            "deb http://archive.kylinos.cn/kylin/partner juniper main",
+            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 default all",
         ],
-        ("amd64", "arm64", "mips64el"),
-    ),
-    # ------------------------------------------------- V10 SP1 2107 / 0521
-    _p(
-        "sp1-2107-hwe",
-        "V10SP1-2107-HWE & V10SP1-0521-HWE",
-        "V10 SP1 2107 / 0521",
-        "2107/0521 HWE（KY desktop + partner）",
-        [
-            "deb %s default all" % _KY_DESKTOP,
-            "deb %s default all" % _PARTNER_SP1,
-            "deb %s 10.1-hwe main" % _ARCH_BASE,
-            "deb %s 10.1 main" % _ARCH_PARTNER,
-        ],
-        ("amd64", "arm64"),
-        notes=(
-            "源地址中的 $(ARCH) 会在创建 profile 时替换为目标主架构；"
-            "已在公网镜像验证 amd64/arm64。",
-        ),
-    ),
-    _p(
-        "sp1-2107-0521",
-        "V10 SP1 2107 & 211217 & 0521（多架构）",
-        "V10 SP1 2107 / 0521",
-        "2107 / 211217 / 0521 系列",
-        [
-            "deb %s 10.1 main universe multiverse restricted" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-        ("amd64", "arm64", "mips64el"),
-    ),
-    # ------------------------------------------------------- V10 SP1 2203
-    _p(
-        "sp1-2203",
-        "V10 SP1 2203（X86_64 / ARM64 / MIPS64el / LoongArch64）",
-        "V10 SP1 2203",
-        "2203 基础更新",
-        [
-            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2203-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-        ("amd64", "arm64", "mips64el", "loongarch64"),
-    ),
-    _p(
-        "sp1-2203-hwe",
-        "V10 SP1 2203 HWE",
-        "V10 SP1 2203",
-        "2203 HWE 更新",
-        [
-            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2203-hwe-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    # ------------------------------------------------------- V10 SP1 2303
-    _p(
-        "sp1-2303",
-        "V10 SP1 2303 & update2（通用版）",
-        "V10 SP1 2303",
-        "2303 通用版",
-        [
-            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-        notes=("文档中 components 重复写了 universe，此预设已去重。",),
-    ),
-    _p(
-        "sp1-2303-hwe",
-        "V10 SP1 2303 HWE & update2",
-        "V10 SP1 2303",
-        "2303 HWE",
-        [
-            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2303-hwe-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    _p(
-        "sp1-2303-hwe-pp",
-        "V10 SP1 2303 HWE-PP",
-        "V10 SP1 2303",
-        "2303 HWE + PP 分支",
-        [
-            "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2303-hwe-pp-updates main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    # --------------------------------------------------------- 海思麒麟
-    _p(
-        "sp1-kirin990-old",
-        "V10 SP1 海思麒麟 990（早期版）",
-        "海思麒麟（Kirin）",
-        "Kirin 990 早期",
-        [
-            "deb http://archive1.kylinos.cn/kylin/KYLIN-ALL 10.1-pv main restricted universe multiverse",
-            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin990/custom/partner/10_1-kirin990 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-kirin990-new",
-        "V10 SP1 海思麒麟 990（2107版）",
-        "海思麒麟（Kirin）",
-        "Kirin 990 2107版",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-2203-kirin990",
-        "V10 SP1 2203 海思麒麟 990",
-        "海思麒麟（Kirin）",
-        "2203 + Kirin 990 feature",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10_1-kirin990-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-2203-kirin9006c",
-        "V10 SP1 2203 海思麒麟 9006C",
-        "海思麒麟（Kirin）",
-        "2203 + Kirin 9006C feature",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin9006c-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-2303-kirin990",
-        "V10 SP1 2303 海思麒麟 990",
-        "海思麒麟（Kirin）",
-        "2303 + Kirin 990 feature",
-        [
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL/ 10_1-kirin990-2303-feature main",
-            "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-2303-kirin9006c",
-        "V10 SP1 2303 海思麒麟 9006C",
-        "海思麒麟（Kirin）",
-        "2303 + Kirin 9006C feature",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    _p(
-        "sp1-2303u2-kirin9006c",
-        "V10 SP1 2303-update2 海思麒麟 9006C",
-        "海思麒麟（Kirin）",
-        "2303 update2 + Kirin 9006C（文档同 2303 条）",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE, _DUP_NOTE),
-    ),
-    _p(
-        "sp1-2303u2-kirin990",
-        "V10 SP1 2303-update2 海思麒麟 990",
-        "海思麒麟（Kirin）",
-        "2303 update2 + Kirin 990（文档同 2303 条）",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10_1-kirin990-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE, _DUP_NOTE),
-    ),
-    _p(
-        "sp1-2403-kirin9000c",
-        "V10 SP1 2403 海思麒麟 9000C",
-        "海思麒麟（Kirin）",
-        "2403 Wayland + Kirin 9000C feature",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2403-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9000C-2403-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE,),
-    ),
-    # --------------------------------------------------------- 盘古
-    _p(
-        "sp1-2203-pangwu-m900",
-        "V10 SP1 2203 盘古 M900",
-        "海思麒麟 · 盘古（Pangwu）",
-        "2203 Wayland + 盘古 M900",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-pangwu main universe restricted multiverse",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (_KIRIN_NOTE, _PANGWU_NOTE),
-    ),
-    _p(
-        "sp1-2303-pangwu-m900",
-        "V10 SP1 2303 盘古 M900",
-        "海思麒麟 · 盘古（Pangwu）",
-        "2303 Wayland + 盘古 M900",
-        [
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse",
-            "deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirinM900-2303-feature main",
-            "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all",
-        ],
-        ("arm64",),
-        (
-            _KIRIN_NOTE,
-            _PANGWU_NOTE,
-            "10.1-kirinM900-2303-feature 在当前公网镜像返回 404；请以目标机实际 suite 为准。",
-        ),
-    ),
-    # ------------------------------------------------------- V10 SP1 2403
-    _p(
-        "sp1-2403",
-        "V10 SP1 2403（通用版）",
-        "V10 SP1 2403",
-        "2403 通用版",
-        [
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-updates main restricted universe multiverse",
-        ],
-    ),
-    _p(
-        "sp1-2403-u1",
-        "V10 SP1 2403-update1",
-        "V10 SP1 2403",
-        "2403 update1",
-        [
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse",
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    _p(
-        "sp1-2403-hwe-u1",
-        "V10 SP1 2403 HWE & update1",
-        "V10 SP1 2403",
-        "2403 HWE + update1",
-        [
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-hwe-update1 main",
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    _p(
-        "sp1-2403-u2",
-        "V10 SP1 2403-update2",
-        "V10 SP1 2403",
-        "2403 update2",
-        [
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse",
-            "deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update2 main restricted universe multiverse",
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-    ),
-    # ------------------------------------------------------- V10 SP1 2503
-    _p(
-        "sp1-2503-hwe",
-        "V10 SP1 2503 HWE",
-        "V10 SP1 2503",
-        "2503 + HWE + bugfix",
-        [
-            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-kylin-2503-hwe main" % _ARCH_BASE,
-            "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2503-hwe-bugfix main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s default all" % _PARTNER_SP1,
-        ],
-        notes=(_2503_NOTE,),
-    ),
-    _p(
-        "sp1-2503",
-        "V10 SP1 2503（通用版）",
-        "V10 SP1 2503",
-        "2503 通用版",
-        [
-            "deb %s default all" % _PARTNER_SP1,
-            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH_BASE,
-        ],
-        notes=(_2503_NOTE,),
+        architectures=("amd64", "arm64", "mips64el"),
+        notes=("来自旧版《银河麒麟桌面版软件源地址汇总》；新外网源清单（XC / HWE / Wayland）不再收录 V10 非 SP1（10.0 系），仅在老机器上参考。",)
     ),
 )
+
 
 PRESET_MAP: Dict[str, SourcePreset] = {preset.id: preset for preset in PRESETS}
 
@@ -442,8 +1050,13 @@ def list_presets(group: Optional[str] = None) -> List[SourcePreset]:
 
 def preset_text(preset: SourcePreset, include_notes: bool = True) -> str:
     lines = list(preset.sources)
+    if preset.preferences:
+        lines.append("")
+        lines.append("# /etc/apt/preferences.d/kylin.pref")
+        lines.extend(preset.preferences)
     if include_notes and preset.notes:
         lines.append("")
         for note in preset.notes:
             lines.append("# 注意：" + note)
     return "\n".join(lines)
+
