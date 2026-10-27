@@ -1,16 +1,16 @@
 """内置 apt 源预设。
 
 数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》修正版：
-26 个版本配置、86 条 `deb` 源行（2026-10-26 重新解析并逐行核对）。
+26 个版本配置、88 条 `deb` 源行（2026-10-27 按修正版重新解析并逐行核对）。
 预设只是模板：创建成 profile 后可以自由查看、编辑。
 `docs/kylin-desktop-sources.md` 保存修正版原文，`tests/test_presets.py`
 会校验预设源行与文档一致。
 
 文档中几处需要归一/说明的地方：
-- `PART-10 1-kirin...` 是 OCR 空格，这里按 `PART-10.1-kirin...` 归一；
-- V10SP1-2303 普通版文档重复写了 universe，这里去重；
+- V10SP1-2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为主架构；
+- V10SP1-2303 通用版文档重复写了 universe，这里去重；
 - 16/17 条与 14/15 条在文档中完全相同，update2 的差异未体现；
-- 盘古（Pangwu）在修正版文档中对应飞腾平台，预设按 arm64 处理；
+- 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，预设按 arm64 处理；
 - 部分 Kirin/Pangwu 的 partner/suite 在当前公网镜像未验证到，源文件可随时编辑。
 """
 
@@ -26,16 +26,16 @@ _ARCH_BASE = "http://archive.kylinos.cn/kylin/KYLIN-ALL"
 _ARCH_PARTNER = "http://archive.kylinos.cn/kylin/partner"
 _A2 = "http://archive2.kylinos.cn/deb/kylin/production"
 _PARTNER_SP1 = "http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1"
-
-_LEGACY_NOTE = (
-    "文档中的 partner 路径为 “PART-10 1-...” 形式（疑似 OCR 空格），"
-    "此预设按 “PART-10.1-...” 归一；若 404/签名失败，请在本工具的源配置编辑器里改成目标机实际地址。"
+_KY_DESKTOP = (
+    "http://archive2.kylinos.cn/deb/kylin/production/"
+    "KY-V10-SP1-$(ARCH)/custom/kylin-desktop/V10-SP1-$(ARCH)"
 )
+
 _KIRIN_NOTE = (
     "Kirin/Pangwu 专用 partner/suite 未在当前公网镜像全部验证到；"
     "若解析报 404，请用目标机实际源地址覆盖。"
 )
-_PANGWU_NOTE = "盘古（Pangwu）在修正版文档中对应飞腾平台，预设按 arm64 处理。"
+_PANGWU_NOTE = "盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，预设按 arm64 处理。"
 _DUP_NOTE = "文档中该条与相邻条目相同，update2 的 suite 差异未体现；请以目标机实际源为准。"
 _2503_NOTE = (
     "文档使用 10.1-2503-bugfix；部分镜像/机器上实际是 10.1-2503-bugfix-limit。"
@@ -102,16 +102,19 @@ PRESETS: Tuple[SourcePreset, ...] = (
     # ------------------------------------------------- V10 SP1 2107 / 0521
     _p(
         "sp1-2107-hwe",
-        "V10 SP1 2107 & 211217 HWE",
+        "V10SP1-2107-HWE & V10SP1-0521-HWE",
         "V10 SP1 2107 / 0521",
-        "HWE 硬件启用栈",
+        "2107/0521 HWE（KY desktop + partner）",
         [
-            "deb %s 10.1-hwe main restricted universe multiverse" % _ARCH_BASE,
-            "deb %s 10.1-hwe main" % _ARCH_PARTNER,
+            "deb %s default all" % _KY_DESKTOP,
+            "deb %s default all" % _PARTNER_SP1,
+            "deb %s 10.1-hwe main" % _ARCH_BASE,
+            "deb %s 10.1 main" % _ARCH_PARTNER,
         ],
+        ("amd64", "arm64"),
         notes=(
-            "当前公网镜像上 partner/10.1-hwe 返回 404；"
-            "若 apt update 失败，请编辑源文件按目标机实际地址修改。",
+            "源地址中的 $(ARCH) 会在创建 profile 时替换为目标主架构；"
+            "已在公网镜像验证 amd64/arm64。",
         ),
     ),
     _p(
@@ -152,9 +155,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
     # ------------------------------------------------------- V10 SP1 2303
     _p(
         "sp1-2303",
-        "V10 SP1 2303 & update2（普通版）",
+        "V10 SP1 2303 & update2（通用版）",
         "V10 SP1 2303",
-        "2303 普通版",
+        "2303 通用版",
         [
             "deb %s 10.1 main restricted universe multiverse" % _ARCH_BASE,
             "deb %s 10.1-2303-updates main restricted universe multiverse" % _ARCH_BASE,
@@ -197,7 +200,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin990/custom/partner/10.1-kirin990 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-kirin990-new",
@@ -209,7 +212,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-2203-kirin990",
@@ -222,7 +225,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-2203-kirin9006c",
@@ -235,7 +238,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-2303-kirin990",
@@ -249,7 +252,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-2303-kirin9006c",
@@ -263,7 +266,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     _p(
         "sp1-2303u2-kirin9006c",
@@ -277,7 +280,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE, _DUP_NOTE),
+        (_KIRIN_NOTE, _DUP_NOTE),
     ),
     _p(
         "sp1-2303u2-kirin990",
@@ -291,7 +294,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE, _DUP_NOTE),
+        (_KIRIN_NOTE, _DUP_NOTE),
     ),
     _p(
         "sp1-2403-kirin9000c",
@@ -305,7 +308,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_KIRIN_NOTE,),
     ),
     # --------------------------------------------------------- 盘古
     _p(
@@ -318,7 +321,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE, _PANGWU_NOTE),
+        (_KIRIN_NOTE, _PANGWU_NOTE),
     ),
     _p(
         "sp1-2303-pangwu-m900",
@@ -333,7 +336,6 @@ PRESETS: Tuple[SourcePreset, ...] = (
         ],
         ("arm64",),
         (
-            _LEGACY_NOTE,
             _KIRIN_NOTE,
             _PANGWU_NOTE,
             "10.1-kirinM900-2303-feature 在当前公网镜像返回 404；请以目标机实际 suite 为准。",
@@ -403,9 +405,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
     ),
     _p(
         "sp1-2503",
-        "V10 SP1 2503（普通版）",
+        "V10 SP1 2503（通用版）",
         "V10 SP1 2503",
-        "2503 普通版",
+        "2503 通用版",
         [
             "deb %s default all" % _PARTNER_SP1,
             "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH_BASE,

@@ -7,13 +7,32 @@
 
 - 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.2] - 2026-10-27
+
+### 修复
+
+- 纠正盘古（Pangwu）说明：盘古是华为海思的芯片产品线，ARM64 架构，
+  不是飞腾平台；同步修正 `presets.py`、`docs/` 和 README。
+- 移除预设中的 `_LEGACY_NOTE`。修正版源数据已无 OCR 空格，源地址直接使用
+  `PART-10.1-kirin...`，不再提示用户手工替换。
+- 预设名称/描述中的“普通版”统一改为“通用版”（2303、2503）。
+- 预设与文档一致性测试不再做 OCR 空格归一，只保留重复组件归一；
+  新增“预设名称/描述不含‘普通版’”断言。
+
+### 变更
+
+- 按最新修正版重新对齐：源行 86 → 88，更新 V10SP1-2107/0521-HWE
+  的 KY desktop / partner / 基础源；`$(ARCH)` 在创建 profile 时替换为主架构
+  （amd64/arm64 已验证）。
+- 版本号更新为 0.2.2，重新构建 deb。
+
 ## [0.2.1] - 2026-10-27
 
 ### 变更
 
 - 按修正版《银河麒麟桌面版软件源地址汇总.md》重新解析并逐行核对
   26 个源预设 / 86 条 `deb` 源行；
-- 补充盘古（Pangwu）对应飞腾平台的说明，两个盘古预设继续按 arm64 处理；
+- 补充盘古（Pangwu）平台说明，两个盘古预设继续按 arm64 处理；
 - `docs/kylin-desktop-sources.md` 同步修正版原文；
 - 新增 `test_presets_match_corrected_document`，防止文档与预设再次漂移；
 - 版本号更新为 0.2.1，重新构建 deb。
@@ -115,7 +134,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.2
 [0.2.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.1.0

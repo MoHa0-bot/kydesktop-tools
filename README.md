@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.1**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.2.2**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## apt 到底依赖哪些信息
@@ -58,14 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.1_all.deb
+sudo dpkg -i ./kylinpkg_0.2.2_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.1_all.deb
+sudo dpkg -i ./kylinpkg_0.2.2_all.deb
 ```
 
 安装后的路径：
@@ -213,8 +213,10 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 ### 文档里的几处修正/说明
 
-- `PART-10 1-kirin...` 是 OCR 空格，预设按 `PART-10.1-kirin...` 归一；
-- V10SP1-2303 普通版文档重复写了 `universe`，预设已去重；
+- 修正版源数据已无 OCR 空格，预设直接使用 `PART-10.1-kirin...` 路径；
+- 2107/0521 HWE 的 KY 桌面源含 `$(ARCH)`，创建 profile 时替换为目标主架构（amd64/arm64 已验证）；
+- V10SP1-2303 通用版文档重复写了 `universe`，预设已去重；
+- 盘古（Pangwu）是华为海思的芯片产品线，ARM64 架构，不是飞腾平台；
 - 第 16/17 条与第 14/15 条在文档中完全相同，update2 的差异未体现；
 - 部分 Kirin/Pangwu partner、`10.1-kirinM900-2303-feature`、`partner/10.1-hwe`
   在当前公网镜像上未验证到（404/超时）；预设会保留文档地址并带警告，
@@ -223,7 +225,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   `10.1-2503-bugfix-limit`，预设带注释提醒。
 
 每次修改 `docs/kylin-desktop-sources.md` 后运行测试，
-`tests/test_presets.py` 会逐行校验预设与文档一致（允许 OCR 空格和重复组件归一）。
+`tests/test_presets.py` 会逐行校验预设与文档一致（允许重复组件归一）。
 
 ## 查看和编辑源配置
 

@@ -24,7 +24,7 @@
 set -u
 shopt -s nullglob
 
-VERSION="0.2.1"
+VERSION="0.2.2"
 OUT_DIR="${TMPDIR:-/tmp}"
 PREFIX=""
 WITH_AUTH=0

@@ -663,19 +663,6 @@ def create_from_preset(
         shutil.rmtree(str(pdir))
     _ensure_layout(pdir)
     try:
-        lines = [
-            "# kylinpkg preset: %s" % preset.id,
-            "# %s" % preset.name,
-            "# source: %s" % SOURCE_DOC,
-            "# 可在 GUI 或 kylinpkg profile edit 中修改以下源",
-        ]
-        lines.extend(preset.sources)
-        if preset.notes:
-            lines.append("")
-            for note in preset.notes:
-                lines.append("# 注意：" + note)
-        atomic_write_text(pdir / "sources.list", "\n".join(lines) + "\n", 0o600)
-        key_count = _copy_keyrings_from_apt(Path("/etc/apt"), pdir)
         extra_warnings: List[str] = []
         if architectures:
             target_archs = normalize_arch_set(architectures)
@@ -698,6 +685,23 @@ def create_from_preset(
                     )
         else:
             target_archs = detect_system_archs()
+
+        primary_arch = target_archs[0]
+        lines = [
+            "# kylinpkg preset: %s" % preset.id,
+            "# %s" % preset.name,
+            "# source: %s" % SOURCE_DOC,
+            "# 可在 GUI 或 kylinpkg profile edit 中修改以下源",
+        ]
+        lines.extend(
+            line.replace("$(ARCH)", primary_arch) for line in preset.sources
+        )
+        if preset.notes:
+            lines.append("")
+            for note in preset.notes:
+                lines.append("# 注意：" + note)
+        atomic_write_text(pdir / "sources.list", "\n".join(lines) + "\n", 0o600)
+        key_count = _copy_keyrings_from_apt(Path("/etc/apt"), pdir)
         if key_count == 0:
             extra_warnings.append(
                 "没有找到可复制的 keyring；若源未设置 trusted=yes，apt update 会因签名失败"

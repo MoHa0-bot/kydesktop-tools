@@ -11,6 +11,9 @@ from kylinpkg.util import KylinPkgError
 class PresetsTest(unittest.TestCase):
     def test_catalog_is_parseable_and_unique(self):
         self.assertEqual(len(presets.PRESETS), 26)
+        self.assertFalse(
+            any("普通版" in item.name or "普通版" in item.description for item in presets.PRESETS)
+        )
         ids = [item.id for item in presets.PRESETS]
         self.assertEqual(len(ids), len(set(ids)))
         for item in presets.PRESETS:
@@ -30,12 +33,11 @@ class PresetsTest(unittest.TestCase):
             line.strip() for line in text.splitlines() if line.strip().startswith("deb ")
         ]
         preset_lines = [line for item in presets.PRESETS for line in item.sources]
-        self.assertEqual(len(md_lines), 86)
-        self.assertEqual(len(preset_lines), 86)
+        self.assertEqual(len(md_lines), 88)
+        self.assertEqual(len(preset_lines), 88)
 
         def normalize(line):
             line = " ".join(line.split())
-            line = line.replace("PART-10 1-", "PART-10.1-")
             line = line.replace("universe universe", "universe")
             return line
 
@@ -84,6 +86,17 @@ class PresetsTest(unittest.TestCase):
 
             arm = profile.create_from_preset(state, "kirin-test", "sp1-kirin990-new")
             self.assertEqual(arm["architectures"], ["arm64"])
+
+            hwe = profile.create_from_preset(
+                state, "hwe-arm64", "sp1-2107-hwe", architectures=["arm64"]
+            )
+            self.assertEqual(hwe["architectures"], ["arm64"])
+            hwe_entries = profile.profile_sources(state, "hwe-arm64")
+            self.assertEqual(len(hwe_entries), 4)
+            self.assertTrue(
+                any("KY-V10-SP1-arm64" in entry.uri for entry in hwe_entries)
+            )
+            self.assertFalse(any("$(ARCH)" in entry.uri for entry in hwe_entries))
 
 
 if __name__ == "__main__":

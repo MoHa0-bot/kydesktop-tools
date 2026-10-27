@@ -4,11 +4,11 @@
 
 ---
 
-## 一、V10 基础版（非 SP1）
+## 一、V10（非 SP1）
 
-### 1. V10-2107 / 2101.0710 等
+### 1. V10-2107 / 2101 / 0710 等
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/partner juniper main
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0-fixs main
@@ -16,7 +16,7 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0-fixs main
 
 ### 2. V10-2203（X86_64, ARM64, MIPS64el）
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/partner juniper main
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 default all
@@ -26,16 +26,18 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 
 
 ## 二、V10 SP1 - 2107 / 211217 / 0521 / 0326 系列
 
-### 3. V10SP1-2107&211217-HWE
+### 3. V10SP1-2107-HWE&V10SP1-0521-HWE
 
-```deb
-deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-hwe main restricted universe multiverse
-deb http://archive.kylinos.cn/kylin/partner 10.1-hwe main
+```
+deb http://archive2.kylinos.cn/deb/kylin/production/KY-V10-SP1-$(ARCH)/custom/kylin-desktop/V10-SP1-$(ARCH) default all
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-hwe main
+deb http://archive.kylinos.cn/kylin/partner 10.1 main
 ```
 
-### 4. V10SP1-2107&211217&0521（X86_64, ARM64, MIPS64el, ...）
+### 4. V10SP1-2107&211217&0521（X86_64, ARM64, MIPS64el, loogarch64）
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main universe multiverse restricted
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
 ```
@@ -46,7 +48,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 5. V10SP1-2203（X86_64, ARM64, MIPS64el, LoongArch64）
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2203-updates main restricted universe multiverse
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -54,7 +56,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 6. V10SP1-2203-HWE
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2203-hwe-updates main restricted universe multiverse
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -66,7 +68,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 7. V10SP1-2303 & update2（普通版）
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-updates main restricted universe multiverse
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -74,7 +76,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 8. V10SP1-2303-HWE & update2
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-updates main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-hwe-updates main restricted universe multiverse
@@ -83,7 +85,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 9. V10SP1-2303-HWE-PP
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-updates main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-hwe-pp-updates main restricted universe multiverse
@@ -96,79 +98,79 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 10. V10SP1 - 海思麒麟990（早期版）
 
-```deb
+```
 deb http://archive1.kylinos.cn/kylin/KYLIN-ALL 10.1-pv main restricted universe multiverse
-deb http://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin990/custom/partner/10.1-kirin990 default all
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin990/custom/partner/10.1-kirin990 default all
 ```
 
 ### 11. V10SP1 - 海思麒麟990（新版）
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kv main restricted universe multiverse
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 12. V10SP1-2203 - 海思麒麟990
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 13. V10SP1-2203 - 海思麒麟9006C
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin9006c-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 14. V10SP1-2303 - 海思麒麟990
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-kirin990-2303-feature main
-deb http://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 15. V10SP1-2303 - 海思麒麟9006C
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 16. V10SP1-2303-update2 - 海思麒麟9006C
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9006c-2303-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 17. V10SP1-2303-update2 - 海思麒麟990
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin990-2303-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 18. V10SP1-2403 - 海思麒麟9000C
 
 > 对应镜像：Kylin-Desktop-V10-SP1-2403-Wayland-Release-Retail-pangux-b-20251215-ARM64
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2403-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin9000C-2403-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ---
@@ -177,18 +179,18 @@ deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/p
 
 ### 19. V10SP1-2203 - 盘古M900
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL/ 10.1-wayland-2203-pangwu main universe restricted multiverse
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ### 20. V10SP1-2303 - 盘古M900
 
-```deb
+```
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main universe restricted multiverse
 deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirinM900-2303-feature main
-deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/partner/10.1-kirin9a0 default all
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all
 ```
 
 ---
@@ -197,7 +199,7 @@ deb https://archive2.kylinos.cn/deb/kylin/production/PART-10 1-kirin9a0/custom/p
 
 ### 21. V10SP1-2403（基础版）
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-updates main restricted universe multiverse
@@ -205,7 +207,7 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-updates main restricted 
 
 ### 22. V10SP1-2403-update1
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -213,7 +215,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 23. V10SP1-2403-HWE & update1
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-hwe-update1 main
@@ -222,7 +224,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 24. V10SP1-2403-update2
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-update2 main restricted universe multiverse
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
@@ -234,7 +236,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 25. V10SP1-2503-HWE
 
-```deb
+```
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503-hwe main
@@ -245,7 +247,7 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/
 
 ### 26. V10SP1-2503（普通版）
 
-```deb
+```
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503 main restricted universe multiverse
@@ -265,7 +267,7 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-bugfix main restricted u
 | **feature** | 芯片/平台专属特性分支 |
 | **main / restricted / universe / multiverse** | Debian 软件仓库分类：main=官方免费软件，restricted=私有驱动，universe=社区维护，multiverse=版权受限软件 |
 | **海思麒麟（kirin）** | 针对华为海思芯片（990、9006C、9000C等）的专用版本 |
-| **盘古（pangwu）** | 针对飞腾平台的专用版本分支 |
+| **盘古（pangwu）** | 华为海思芯片产品线，ARM64 架构 |
 
 ---
 
