@@ -7,6 +7,17 @@
 
 - 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.1] - 2026-10-27
+
+### 变更
+
+- 按修正版《银河麒麟桌面版软件源地址汇总.md》重新解析并逐行核对
+  26 个源预设 / 86 条 `deb` 源行；
+- 补充盘古（Pangwu）对应飞腾平台的说明，两个盘古预设继续按 arm64 处理；
+- `docs/kylin-desktop-sources.md` 同步修正版原文；
+- 新增 `test_presets_match_corrected_document`，防止文档与预设再次漂移；
+- 版本号更新为 0.2.1，重新构建 deb。
+
 ## [0.2.0] - 2026-10-26
 
 首个面向 GitHub 管理/可安装 deb 的发布版本。
@@ -104,6 +115,7 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.1.0

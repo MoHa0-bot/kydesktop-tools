@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.0**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.2.1**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## apt 到底依赖哪些信息
@@ -58,15 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo apt install ./kylinpkg_0.2.0_all.deb
-# 或 sudo dpkg -i ./kylinpkg_0.2.0_all.deb && sudo apt -f install
+sudo dpkg -i ./kylinpkg_0.2.1_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo apt install ./dist/kylinpkg_0.2.0_all.deb
+sudo dpkg -i ./kylinpkg_0.2.1_all.deb
 ```
 
 安装后的路径：
@@ -222,6 +221,9 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   创建后可在源配置编辑器里改成目标机实际地址；
 - 2503 预设在文档中写 `10.1-2503-bugfix`，部分机器实际是
   `10.1-2503-bugfix-limit`，预设带注释提醒。
+
+每次修改 `docs/kylin-desktop-sources.md` 后运行测试，
+`tests/test_presets.py` 会逐行校验预设与文档一致（允许 OCR 空格和重复组件归一）。
 
 ## 查看和编辑源配置
 

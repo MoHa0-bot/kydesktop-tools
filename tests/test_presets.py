@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from kylinpkg import deb822, presets, profile
@@ -19,6 +20,29 @@ class PresetsTest(unittest.TestCase):
                 entries = deb822.parse_sources_text(line + "\n", item.id)
                 self.assertEqual(len(entries), 1)
                 self.assertFalse(" " in entries[0].uri)
+
+    def test_presets_match_corrected_document(self):
+        doc = Path(__file__).resolve().parents[1] / "docs" / "kylin-desktop-sources.md"
+        if not doc.is_file():
+            self.skipTest("docs/kylin-desktop-sources.md 不存在")
+        text = doc.read_text(encoding="utf-8", errors="replace")
+        md_lines = [
+            line.strip() for line in text.splitlines() if line.strip().startswith("deb ")
+        ]
+        preset_lines = [line for item in presets.PRESETS for line in item.sources]
+        self.assertEqual(len(md_lines), 86)
+        self.assertEqual(len(preset_lines), 86)
+
+        def normalize(line):
+            line = " ".join(line.split())
+            line = line.replace("PART-10 1-", "PART-10.1-")
+            line = line.replace("universe universe", "universe")
+            return line
+
+        self.assertEqual(
+            Counter(normalize(line) for line in md_lines),
+            Counter(normalize(line) for line in preset_lines),
+        )
 
     def test_specific_presets(self):
         p2503 = presets.get_preset("sp1-2503")

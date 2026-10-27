@@ -1,12 +1,16 @@
 """内置 apt 源预设。
 
-数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》（26 个版本配置）。
+数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》修正版：
+26 个版本配置、86 条 `deb` 源行（2026-10-26 重新解析并逐行核对）。
 预设只是模板：创建成 profile 后可以自由查看、编辑。
+`docs/kylin-desktop-sources.md` 保存修正版原文，`tests/test_presets.py`
+会校验预设源行与文档一致。
 
 文档中几处需要归一/说明的地方：
 - `PART-10 1-kirin...` 是 OCR 空格，这里按 `PART-10.1-kirin...` 归一；
 - V10SP1-2303 普通版文档重复写了 universe，这里去重；
 - 16/17 条与 14/15 条在文档中完全相同，update2 的差异未体现；
+- 盘古（Pangwu）在修正版文档中对应飞腾平台，预设按 arm64 处理；
 - 部分 Kirin/Pangwu 的 partner/suite 在当前公网镜像未验证到，源文件可随时编辑。
 """
 
@@ -31,6 +35,7 @@ _KIRIN_NOTE = (
     "Kirin/Pangwu 专用 partner/suite 未在当前公网镜像全部验证到；"
     "若解析报 404，请用目标机实际源地址覆盖。"
 )
+_PANGWU_NOTE = "盘古（Pangwu）在修正版文档中对应飞腾平台，预设按 arm64 处理。"
 _DUP_NOTE = "文档中该条与相邻条目相同，update2 的 suite 差异未体现；请以目标机实际源为准。"
 _2503_NOTE = (
     "文档使用 10.1-2503-bugfix；部分镜像/机器上实际是 10.1-2503-bugfix-limit。"
@@ -75,7 +80,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "v10-2107",
         "V10-2107 / 2101.0710 等",
         "V10 基础版",
-        "V10 非 SP1 早期版本",
+        "V10 非 SP1",
         [
             "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
             "deb %s juniper main" % _ARCH_PARTNER,
@@ -86,7 +91,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         "v10-2203",
         "V10-2203（X86_64 / ARM64 / MIPS64el）",
         "V10 基础版",
-        "V10 非 SP1 2203",
+        "V10 非 SP1",
         [
             "deb %s 10.0 main restricted universe multiverse" % _ARCH_BASE,
             "deb %s juniper main" % _ARCH_PARTNER,
@@ -313,7 +318,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb https://archive2.kylinos.cn/deb/kylin/production/PART-10.1-kirin9a0/custom/partner/10.1-kirin9a0 default all",
         ],
         ("arm64",),
-        (_LEGACY_NOTE, _KIRIN_NOTE),
+        (_LEGACY_NOTE, _KIRIN_NOTE, _PANGWU_NOTE),
     ),
     _p(
         "sp1-2303-pangwu-m900",
@@ -330,6 +335,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         (
             _LEGACY_NOTE,
             _KIRIN_NOTE,
+            _PANGWU_NOTE,
             "10.1-kirinM900-2303-feature 在当前公网镜像返回 404；请以目标机实际 suite 为准。",
         ),
     ),
