@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """dpkg status 基线：导入、校验、存放。"""
 
 from __future__ import annotations

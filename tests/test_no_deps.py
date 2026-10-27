@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 import gzip
 import shutil
 import tempfile

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """执行下载计划：apt 下载、file:// 复制、哈希校验、生成 manifest。"""
 
 from __future__ import annotations

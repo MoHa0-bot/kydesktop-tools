@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """通用工具：错误类型、命令执行、哈希、原子写、文件复制。"""
 
 from __future__ import annotations

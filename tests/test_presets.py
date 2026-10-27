@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 import tempfile
 import unittest
 from collections import Counter

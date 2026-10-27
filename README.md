@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.4**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.2.5**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## apt 到底依赖哪些信息
@@ -58,14 +58,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.4_all.deb
+sudo dpkg -i ./kylinpkg_0.2.5_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.4_all.deb
+sudo dpkg -i ./kylinpkg_0.2.5_all.deb
 ```
 
 安装后的路径：
@@ -515,3 +515,18 @@ KYLINPKG_NET_TESTS=1 python3 -m unittest tests.test_integration -v
 - 跨架构只做依赖求解和下载，不执行目标架构二进制；`--download-only` 不需要 qemu。
 - 第三方源的 `Signed-By: /绝对路径` 在本机可用；跨机器复用时需要把对应 keyring 一并导入。
 - 依赖求解使用的是**运行工具这台机器上的 apt 版本与解析器**。目标机与工具机跨大版本（例如 SP1 与 SP3）时，建议在对应版本的系统上运行，或至少用同版本基线核对结果。
+
+## 许可证
+
+本项目采用 [MIT 许可证](LICENSE)，`Copyright (c) 2026 mohao`。
+
+- 允许自由使用、复制、修改、合并、发布、分发、再许可和销售副本，包括用于商业目的；
+- 唯一义务是**在所有副本或实质性部分中保留版权声明和许可声明**；
+- 软件按“原样”提供，不含任何明示或隐含的担保，作者不对任何索赔或损害负责；
+- 每个源文件的头部都带有 `SPDX-License-Identifier: MIT` 标识。
+
+## 商标与免责
+
+- 本项目是独立的第三方工具，**不是麒麟软件有限公司的官方产品**，未获得其授权、赞助或背书。
+- “麒麟”“Kylin”及相关商标归各自权利人所有。本项目仅在描述性意义上使用这些名称（用于说明本工具所面向的操作系统与软件源），MIT 许可**不包含任何商标授权**。
+- 本工具从各软件源下载、生成的 deb 包与离线源，其权利与许可仍归各自软件的权利人所有，与本项目的许可无关；请遵守对应软件自身的许可条款。

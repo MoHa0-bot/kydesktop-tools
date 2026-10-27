@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """下载结果清单：读取 .deb 元数据、写 manifest、校验。"""
 
 from __future__ import annotations

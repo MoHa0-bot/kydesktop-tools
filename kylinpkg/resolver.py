@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """依赖解析：调用 apt-get --print-uris，把结果转成可执行的下载计划。"""
 
 from __future__ import annotations

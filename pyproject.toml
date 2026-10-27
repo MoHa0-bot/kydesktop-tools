@@ -8,6 +8,8 @@ dynamic = ["version"]
 description = "多源、多架构 deb 包与依赖离线下载器"
 readme = "README.md"
 requires-python = ">=3.8"
+# 保持 license 的 TOML 表写法：项目要支持 Python 3.8，PEP 639 的 SPDX 字符串写法
+# 需要 setuptools >= 77，旧版会直接把 [project] 判为非法。完整许可文本见 LICENSE。
 license = { text = "MIT" }
 authors = [{ name = "mohao" }]
 keywords = ["kylin", "deb", "apt", "offline", "package"]
@@ -17,6 +19,10 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Environment :: X11 Applications",
 ]
+
+[project.urls]
+Homepage = "https://github.com/MoHa0-bot/kydesktop-tools"
+Repository = "https://github.com/MoHa0-bot/kydesktop-tools"
 
 [project.scripts]
 kylinpkg = "kylinpkg.cli:main"

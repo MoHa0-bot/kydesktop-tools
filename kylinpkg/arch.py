@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """dpkg 架构名归一化与检测。"""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """kylinpkg 命令行入口。"""
 
 from __future__ import annotations

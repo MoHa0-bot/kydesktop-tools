@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """kylinpkg 图形界面（tkinter）。
 
 界面只做三件事：
@@ -2093,7 +2095,10 @@ class App:
             "kylinpkg %s\n\n"
             "多源、多架构 deb 包与依赖离线下载器。\n"
             "所有 apt 操作在隔离 root 中进行，不修改本机 /etc/apt 与 /var/lib/dpkg。\n\n"
-            "CLI: bin/kylinpkg\nGUI: bin/kylinpkg-gui" % __version__,
+            "CLI: bin/kylinpkg\nGUI: bin/kylinpkg-gui\n\n"
+            "许可：MIT，Copyright (c) 2026 mohao\n"
+            "本项目是独立的第三方工具，不是麒麟软件有限公司的官方产品。\n"
+            "“麒麟”“Kylin”商标归各自权利人所有，本项目仅作描述性使用。" % __version__,
             parent=self.root,
         )
 

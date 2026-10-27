@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """apt 源配置 profile：导入、校验、存放、与 baseline 绑定。"""
 
 from __future__ import annotations

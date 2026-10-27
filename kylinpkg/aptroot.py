@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """隔离的 apt root：准备目录、拼装 apt 参数、执行 update。"""
 
 from __future__ import annotations

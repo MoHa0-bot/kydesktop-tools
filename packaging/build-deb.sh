@@ -61,7 +61,8 @@ install -m 644 "$PROJECT_DIR/packaging/kylinpkg.svg" \
 install -m 644 "$PROJECT_DIR/README.md" "$STAGE/usr/share/doc/kylinpkg/README.md"
 install -m 644 "$PROJECT_DIR/CHANGELOG.md" "$STAGE/usr/share/doc/kylinpkg/CHANGELOG.md"
 install -m 644 "$PROJECT_DIR/CONTRIBUTING.md" "$STAGE/usr/share/doc/kylinpkg/CONTRIBUTING.md"
-install -m 644 "$PROJECT_DIR/LICENSE" "$STAGE/usr/share/doc/kylinpkg/copyright"
+# copyright 用 DEP-5 机器可读格式（Debian Policy 12.5），不用裸 LICENSE 文本
+install -m 644 "$PROJECT_DIR/packaging/copyright" "$STAGE/usr/share/doc/kylinpkg/copyright"
 
 find "$STAGE" -type d -exec chmod 755 {} +
 INSTALLED_SIZE="$(du -sk "$STAGE" | awk '{print $1}')"
@@ -69,8 +70,9 @@ cat > "$STAGE/DEBIAN/control" <<EOF
 Package: ${PACKAGE}
 Version: ${VERSION}
 Architecture: ${ARCH}
-Maintainer: mohao <mohao@localhost>
+Maintainer: mohao <mohao@users.noreply.github.com>
 Installed-Size: ${INSTALLED_SIZE}
+Homepage: https://github.com/MoHa0-bot/kydesktop-tools
 Depends: python3 (>= 3.8), python3-tk, apt, apt-utils, dpkg
 Recommends: ca-certificates, openssh-client
 Section: admin

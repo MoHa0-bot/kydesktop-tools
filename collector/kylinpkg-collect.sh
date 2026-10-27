@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 # =============================================================================
 #  kylinpkg-collect.sh
 #
@@ -24,7 +26,7 @@
 set -u
 shopt -s nullglob
 
-VERSION="0.2.4"
+VERSION="0.2.5"
 OUT_DIR="${TMPDIR:-/tmp}"
 PREFIX=""
 WITH_AUTH=0

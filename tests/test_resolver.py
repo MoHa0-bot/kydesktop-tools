@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 import unittest
 
 from kylinpkg.resolver import PlanEntry, _annotate_baseline, _requested_name, apt_error_hint, parse_print_uris

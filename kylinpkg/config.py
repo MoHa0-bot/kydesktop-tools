@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """状态目录布局与文件锁。"""
 
 from __future__ import annotations

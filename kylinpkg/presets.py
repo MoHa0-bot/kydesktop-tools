@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """内置 apt 源预设。
 
 数据来自用户提供的《银河麒麟桌面版软件源地址汇总.md》修正版：

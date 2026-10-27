@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """把下载目录转换成 apt 可直接使用的扁平离线源。"""
 
 from __future__ import annotations

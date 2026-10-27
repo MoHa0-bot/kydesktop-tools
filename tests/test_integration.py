@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """联网集成测试：默认跳过，KYLINPKG_NET_TESTS=1 时运行。
 
 验证：

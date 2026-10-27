@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """原始主机收集包（kylinpkg-collect 生成）的检查与一键导入。"""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 """Deb822 风格文本解析：dpkg status / Packages / sources.list(.d)。"""
 
 from __future__ import annotations

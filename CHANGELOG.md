@@ -7,6 +7,18 @@
 
 - 计划中：更多麒麟小版本预设、下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.5] - 2026-10-27
+
+### 许可相关
+
+- README 新增“许可证”“商标与免责”两节：说明 MIT 条款要点，并声明本项目是独立第三方工具、非麒麟官方产品，MIT 不含商标授权。
+- 新增 `packaging/copyright`（DEP-5 机器可读格式），构建 deb 时用它作为 `/usr/share/doc/kylinpkg/copyright`，不再直接塞裸 LICENSE 文本。
+- deb `control` 的 Maintainer 改为 `mohao <mohao@users.noreply.github.com>`，并补 `Homepage`。
+- `pyproject.toml` 补齐 `[project.urls]`；`license` 字段保留 TOML 表写法（Python 3.8 环境下 PEP 639 的 SPDX 字符串写法会让 `[project]` 变成非法配置），已加注释说明。
+- 所有源文件（含测试、入口脚本、collector 脚本）头部加 `SPDX-License-Identifier: MIT` 与版权行。
+- GUI“关于”对话框补上许可信息与商标免责说明。
+- 版本号更新为 0.2.5。
+
 ## [0.2.4] - 2026-10-27
 
 ### 变更
@@ -158,7 +170,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.5
 [0.2.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.4
 [0.2.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.3
 [0.2.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.2

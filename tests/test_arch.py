@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 mohao
 import unittest
 
 from kylinpkg.arch import arch_key, normalize_arch, normalize_arch_set, parse_arch_list
