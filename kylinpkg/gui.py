@@ -201,7 +201,7 @@ class App:
         refresh_button.pack(side="right", padx=(0, 12))
         self._action_widgets.append(refresh_button)
         bundle_button = ttk.Button(
-            header, text="导入收集包", command=self._bundle_import_dialog
+            header, text="导入其他主机配置", command=self._bundle_import_dialog
         )
         bundle_button.pack(side="right", padx=(0, 6))
         self._action_widgets.append(bundle_button)
@@ -416,6 +416,7 @@ class App:
         file_menu.add_command(label="退出", command=self.root.destroy)
         menubar.add_cascade(label="文件", menu=file_menu)
         help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="使用手册", command=self._open_manual)
         help_menu.add_command(label="关于", command=self._show_about)
         menubar.add_cascade(label="帮助", menu=help_menu)
         self.root.config(menu=menubar)
@@ -1372,9 +1373,53 @@ class App:
         self._center_dialog(win)
         self._make_modal(win)
 
+    def _locate_collector_asset(self, name: str) -> Optional[Path]:
+        """定位收集脚本/使用手册：deb 安装在 /opt/kylinpkg，源码运行在仓库根目录。"""
+        candidates = [
+            Path(__file__).resolve().parents[1] / "collector" / name,
+            Path("/opt/kylinpkg/collector") / name,
+        ]
+        for path in candidates:
+            if path.is_file():
+                return path
+        return None
+
+    def _save_collector_asset(
+        self, asset_name: str, default_name: str, parent: tk.Widget
+    ) -> None:
+        """把内置的收集脚本/使用手册另存到用户选择的位置。"""
+        source = self._locate_collector_asset(asset_name)
+        if source is None:
+            messagebox.showerror(
+                "文件缺失",
+                "未找到内置的 %s。\n请从安装目录 /opt/kylinpkg/collector 获取。" % asset_name,
+                parent=parent,
+            )
+            return
+        target = filedialog.asksaveasfilename(
+            parent=parent,
+            title="保存%s" % default_name,
+            initialfile=default_name,
+            defaultextension=source.suffix,
+        )
+        if not target:
+            return
+        try:
+            shutil.copyfile(source, target)
+        except OSError as exc:
+            messagebox.showerror("保存失败", str(exc), parent=parent)
+            return
+        if source.suffix == ".sh":
+            try:
+                Path(target).chmod(0o755)
+            except OSError:
+                pass
+        self._append_log("已导出收集脚本资料：%s" % target)
+        messagebox.showinfo("保存成功", "已保存到：\n%s" % target, parent=parent)
+
     def _bundle_import_dialog(self) -> None:
         win = tk.Toplevel(self.root)
-        win.title("导入原始主机收集包")
+        win.title("导入其他主机配置")
         win.transient(self.root)
         win.columnconfigure(1, weight=1)
 
@@ -1385,9 +1430,31 @@ class App:
         bind_var = tk.BooleanVar(value=True)
         force_var = tk.BooleanVar(value=False)
 
+        hint = ttk.Frame(win)
+        hint.grid(row=0, column=0, columnspan=3, sticky="ew", padx=8, pady=(8, 2))
+        ttk.Label(
+            hint,
+            text="先在原始主机上运行收集脚本生成收集包，再在此导入。",
+            foreground="#777777",
+        ).pack(side="left")
+        ttk.Button(
+            hint,
+            text="使用手册",
+            command=lambda: self._save_collector_asset(
+                "README.md", "kylinpkg-collect-使用手册.md", win
+            ),
+        ).pack(side="right")
+        ttk.Button(
+            hint,
+            text="下载收集脚本",
+            command=lambda: self._save_collector_asset(
+                "kylinpkg-collect.sh", "kylinpkg-collect.sh", win
+            ),
+        ).pack(side="right", padx=(0, 6))
+
         self._dialog_row(
             win,
-            0,
+            1,
             "收集包文件：",
             archive_var,
             "选择",
@@ -1397,28 +1464,28 @@ class App:
                 (("kylinpkg 收集包", "*.tar.gz *.tgz"), ("所有文件", "*")),
             ),
         )
-        self._dialog_row(win, 1, "profile 名称：", profile_var, "")
+        self._dialog_row(win, 2, "profile 名称：", profile_var, "")
         ttk.Label(win, text="留空则用收集包中的主机名", foreground="#777777").grid(
-            row=1, column=2, sticky="w", padx=4
-        )
-        self._dialog_row(win, 2, "baseline 名称：", baseline_var, "")
-        ttk.Label(win, text="留空则用 <profile>-baseline", foreground="#777777").grid(
             row=2, column=2, sticky="w", padx=4
         )
-        ttk.Label(win, text="目标架构：").grid(row=3, column=0, sticky="w", padx=8, pady=4)
+        self._dialog_row(win, 3, "baseline 名称：", baseline_var, "")
+        ttk.Label(win, text="留空则用 <profile>-baseline", foreground="#777777").grid(
+            row=3, column=2, sticky="w", padx=4
+        )
+        ttk.Label(win, text="目标架构：").grid(row=4, column=0, sticky="w", padx=8, pady=4)
         ttk.Combobox(
             win,
             textvariable=arch_var,
             values=_arch_labels(include_auto=True),
             state="readonly",
             width=38,
-        ).grid(row=3, column=1, sticky="ew", padx=4, pady=4)
+        ).grid(row=4, column=1, sticky="ew", padx=4, pady=4)
         ttk.Label(
             win, text="自动：使用包内 dpkg status 的架构", foreground="#777777"
-        ).grid(row=3, column=2, sticky="w", padx=4)
+        ).grid(row=4, column=2, sticky="w", padx=4)
 
         options = ttk.Frame(win)
-        options.grid(row=4, column=1, columnspan=2, sticky="w", padx=4, pady=4)
+        options.grid(row=5, column=1, columnspan=2, sticky="w", padx=4, pady=4)
         ttk.Checkbutton(
             options, text="绑定为 profile 默认基线", variable=bind_var
         ).pack(side="left")
@@ -1427,14 +1494,14 @@ class App:
         ).pack(side="left", padx=(14, 0))
 
         buttons = ttk.Frame(win)
-        buttons.grid(row=5, column=0, columnspan=3, sticky="e", padx=8, pady=(8, 10))
+        buttons.grid(row=6, column=0, columnspan=3, sticky="e", padx=8, pady=(8, 10))
 
         def do_import() -> None:
             archive = archive_var.get().strip()
             if not archive:
                 messagebox.showerror("导入失败", "请选择收集包文件", parent=win)
                 return
-            self.status_var.set("正在导入收集包")
+            self.status_var.set("正在导入其他主机配置")
             self.root.update_idletasks()
             try:
                 arch_text = _arch_value(arch_var.get())
@@ -1457,7 +1524,7 @@ class App:
                 self.baseline_tree.selection_set(result["baseline"])
                 self.baseline_var.set(result["baseline"])
             self._append_log(
-                "已导入收集包：profile=%s，baseline=%s（已安装 %s 个包，%s 条源）"
+                "已导入其他主机配置：profile=%s，baseline=%s（已安装 %s 个包，%s 条源）"
                 % (
                     result["profile"],
                     result["baseline"],
@@ -1467,7 +1534,7 @@ class App:
             )
             for warning in result.get("warnings") or []:
                 self._append_log("警告：%s" % warning)
-            self.status_var.set("收集包导入完成")
+            self.status_var.set("其他主机配置导入完成")
             self._release_grab(win)
             win.destroy()
 
@@ -2122,6 +2189,38 @@ class App:
             )
         else:
             messagebox.showinfo("状态目录", str(self.state.root), parent=self.root)
+
+    def _locate_manual(self) -> Optional[Path]:
+        """定位使用手册 PDF：源码运行在仓库根 docs/，deb 安装在 /opt/kylinpkg/docs/。"""
+        candidates = [
+            Path(__file__).resolve().parents[1] / "docs" / "kylinpkg-manual.pdf",
+            Path("/opt/kylinpkg/docs/kylinpkg-manual.pdf"),
+        ]
+        for path in candidates:
+            if path.is_file():
+                return path
+        return None
+
+    def _open_manual(self) -> None:
+        manual = self._locate_manual()
+        if manual is None:
+            messagebox.showerror(
+                "未找到使用手册",
+                "未找到内置的使用手册 PDF。\n"
+                "请从安装目录 /opt/kylinpkg/docs 获取，或在源码目录执行：\n"
+                "python3 packaging/build-doc-pdf.py",
+                parent=self.root,
+            )
+            return
+        opener = shutil.which("xdg-open")
+        if opener:
+            subprocess.Popen(
+                [opener, str(manual)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            messagebox.showinfo("使用手册", str(manual), parent=self.root)
 
     def _show_about(self) -> None:
         messagebox.showinfo(

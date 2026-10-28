@@ -7,6 +7,34 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.9] - 2026-10-28
+
+### 新增：PDF 使用手册与帮助菜单入口
+
+- 新增 `packaging/build-doc-pdf.py`：把 `README.md` 渲染成 PDF 使用手册
+  （`docs/kylinpkg-manual.pdf`，markdown → HTML → weasyprint 打印，
+  A4 版式、页脚页码，表格/代码块防跨页拆断）。
+- GUI 菜单栏 **帮助 → 使用手册** 用系统默认程序打开该 PDF；源码运行从
+  仓库 `docs/` 查找，deb 安装后从 `/opt/kylinpkg/docs/` 查找，缺失时提示
+  重新生成。
+- `build-deb.sh` 打包时校验手册 PDF 已生成；`CONTRIBUTING.md` 发布流程
+  补充“README 有改动先重新生成手册”的步骤。
+- 版本号更新为 0.2.9。
+
+## [0.2.8] - 2026-10-28
+
+### 变更：导入收集包界面改名并内置资料下载
+
+- GUI 顶部按钮“导入收集包”更名为 **“导入其他主机配置”**，对话框标题
+  同步调整；导入过程的状态栏与日志文案一并更新。
+- “导入其他主机配置”对话框顶部新增 **“下载收集脚本”** 与 **“使用手册”**
+  按钮，可把内置的 `collector/kylinpkg-collect.sh` 与 `collector/README.md`
+  另存到任意位置；脚本保存后自动赋予执行权限（755）。
+- 内置资料按“源码仓库根目录 → `/opt/kylinpkg/collector`”两路查找，
+  源码运行与 deb 安装均可使用。
+- 同步更新 `README.md`、`collector/README.md` 与收集脚本输出中的按钮文案。
+- 版本号更新为 0.2.8。
+
 ## [0.2.7] - 2026-10-28
 
 ### 修复：GUI 窗口与任务栏没有图标
@@ -213,7 +241,11 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.9...HEAD
+[0.2.9]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.9
+[0.2.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.8
+[0.2.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.7
+[0.2.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.6
 [0.2.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.5
 [0.2.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.4
 [0.2.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.3

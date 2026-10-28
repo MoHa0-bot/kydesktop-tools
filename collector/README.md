@@ -61,7 +61,8 @@ kylinpkg bundle import kylinpkg-bundle-xxx.tar.gz \
   --profile sp1-2303-arm64 --arch arm64 --no-bind
 ```
 
-图形界面：主界面点击 **“导入收集包…”**，选择 tar.gz，填写名称即可。
+图形界面：主界面点击 **“导入其他主机配置…”**，选择 tar.gz，填写名称即可；
+对话框内还可直接下载本脚本和使用手册。
 
 ## 注意
 

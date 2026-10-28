@@ -15,6 +15,12 @@ for cmd in dpkg-deb python3; do
     command -v "$cmd" >/dev/null 2>&1 || { echo "缺少命令：$cmd" >&2; exit 1; }
 done
 
+# 使用手册 PDF 随包分发；缺失时给出提醒（不阻断打包）
+if [ ! -f "$PROJECT_DIR/docs/kylinpkg-manual.pdf" ]; then
+    echo "提示：docs/kylinpkg-manual.pdf 不存在，GUI“帮助→使用手册”将不可用。" >&2
+    echo "      可执行 python3 packaging/build-doc-pdf.py 重新生成。" >&2
+fi
+
 rm -rf "$STAGE"
 mkdir -p \
     "$STAGE/DEBIAN" \

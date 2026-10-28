@@ -62,6 +62,11 @@ KYLINPKG_NET_TESTS=1 python3 -m unittest tests.test_integration -v
    python3 -m unittest discover -s tests -v
    ./packaging/build-deb.sh
    ```
+   如果 `README.md` 有改动，先重新生成 PDF 使用手册（随 deb 分发、
+   GUI“帮助→使用手册”打开）：
+   ```bash
+   python3 packaging/build-doc-pdf.py
+   ```
 6. 提交并打 tag：
    ```bash
    git add -A

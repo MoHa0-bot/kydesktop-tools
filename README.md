@@ -4,8 +4,10 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.5**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
-开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+当前版本：**0.2.9**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
+PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
+（由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
 
 ## apt 到底依赖哪些信息
 
@@ -58,14 +60,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.7_all.deb
+sudo dpkg -i ./kylinpkg_0.2.9_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.7_all.deb
+sudo dpkg -i ./kylinpkg_0.2.9_all.deb
 ```
 
 安装后的路径：
@@ -95,7 +97,10 @@ sudo dpkg -i ./kylinpkg_0.2.7_all.deb
 GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），
 在 GUI 里导入的 profile/baseline 可以直接被命令行使用，反之亦然。
 
-界面分三块（顶部另有 **“导入收集包”** 和 **“清理缓存”** 按钮）：
+界面分三块（顶部另有 **“导入其他主机配置”** 和 **“清理缓存”** 按钮）：
+
+菜单栏的 **帮助 → 使用手册** 会用系统默认程序打开 PDF 版使用手册
+（`docs/kylinpkg-manual.pdf`，随 deb 一起安装到 `/opt/kylinpkg/docs/`）。
 
 1. **apt 源配置（profile）**：按钮行保持 `从预设创建`、`从本机导入`、
    `编辑源配置`、`更多`、`删除` 一行显示；`导入源配置`（自定义
@@ -149,7 +154,9 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 ./bin/kylinpkg resolve -p sp1-2303 zlib1g
 ```
 
-也可以直接在 GUI 顶部点 **“导入收集包”**，选择 tar.gz 并填写名称。
+也可以直接在 GUI 顶部点 **“导入其他主机配置”**，选择 tar.gz 并填写名称；
+对话框里还提供 **“下载收集脚本”** 和 **“使用手册”** 按钮，可把
+`collector/kylinpkg-collect.sh` 和说明文档另存到任意位置。
 
 收集包包含：
 

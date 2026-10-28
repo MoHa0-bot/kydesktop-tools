@@ -14,7 +14,7 @@
 #
 #  产出一个 tar.gz，可直接在下载器上执行：
 #     kylinpkg bundle import <file.tar.gz> --profile <名称> --baseline <名称>
-#  或在 GUI 里点“导入收集包…”。
+#  或在 GUI 里点“导入其他主机配置…”（对话框内可下载本脚本）。
 #
 #  用法：
 #     sudo bash kylinpkg-collect.sh [-o 输出目录] [-n 名称前缀] [--with-auth]
@@ -315,7 +315,7 @@ kylinpkg 原始主机收集包
 在下载器上导入：
   kylinpkg bundle inspect <本文件.tar.gz>
   kylinpkg bundle import <本文件.tar.gz> --profile <名称> --baseline <名称>
-或在图形界面中点击“导入收集包…”。
+或在图形界面中点击“导入其他主机配置…”。
 
 注意：收集包可能包含 apt 私有源凭据，请妥善保管。
 EOF
@@ -360,4 +360,4 @@ fi
 echo
 echo "在下载器上导入："
 echo "  kylinpkg bundle import \"$OUT_FILE\" --profile <名称> --baseline <名称>"
-echo "或 GUI：导入收集包…"
+echo "或 GUI：导入其他主机配置…"
