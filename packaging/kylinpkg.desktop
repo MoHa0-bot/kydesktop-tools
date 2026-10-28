@@ -10,6 +10,7 @@ Exec=/opt/kylinpkg/bin/kylinpkg-gui
 TryExec=/opt/kylinpkg/bin/kylinpkg-gui
 Path=/opt/kylinpkg
 Icon=kylinpkg
+StartupWMClass=Kylinpkg
 Terminal=false
 Categories=System;PackageManager;
 Keywords=deb;apt;kylin;offline;package;download;

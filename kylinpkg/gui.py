@@ -118,6 +118,37 @@ def _setup_fonts(root: tk.Tk) -> None:
             pass
 
 
+_ICON_SIZES = (16, 32, 48, 64, 128, 256)
+_ICON_DIR = Path(__file__).resolve().parent / "resources" / "icons"
+# PhotoImage 对象必须保活，否则 Tk 侧图像会被回收导致图标消失
+_icon_refs: List[tk.PhotoImage] = []
+
+
+def _apply_window_icon(root: tk.Tk) -> None:
+    """为窗口设置应用图标（标题栏 + 任务栏共用 _NET_WM_ICON）。
+
+    tkinter 的 PhotoImage 不支持 SVG，因此加载随包分发的多尺寸 PNG；
+    资源缺失或 Tcl 异常时静默跳过，不影响启动。
+    """
+    images: List[tk.PhotoImage] = []
+    for size in _ICON_SIZES:
+        path = _ICON_DIR / ("kylinpkg-%d.png" % size)
+        if not path.is_file():
+            continue
+        try:
+            img = tk.PhotoImage(file=str(path))
+        except tk.TclError:
+            continue
+        images.append(img)
+    if not images:
+        return
+    try:
+        root.iconphoto(True, *images)
+    except tk.TclError:
+        return
+    _icon_refs.extend(images)
+
+
 class App:
     def __init__(self, root: tk.Tk, state: State):
         self.root = root
@@ -2107,7 +2138,10 @@ class App:
 
 
 def run_gui(state: State) -> None:
-    root = tk.Tk()
+    # className 写入 WM_CLASS 的 class 分量，配合 .desktop 的
+    # StartupWMClass 让启动器/任务栏能正确关联窗口
+    root = tk.Tk(className="Kylinpkg")
+    _apply_window_icon(root)
     App(root, state)
     root.mainloop()
 

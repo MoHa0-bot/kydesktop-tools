@@ -5,14 +5,14 @@ cd kydesktop-tools   # 仓库根目录
 ./packaging/build-deb.sh
 ```
 
-输出：`dist/kylinpkg_0.2.6_all.deb`
+输出：`dist/kylinpkg_0.2.7_all.deb`
 
 安装：
 
 ```bash
-sudo apt install ./dist/kylinpkg_0.2.6_all.deb
+sudo apt install ./dist/kylinpkg_0.2.7_all.deb
 # 或
-sudo dpkg -i ./dist/kylinpkg_0.2.6_all.deb
+sudo dpkg -i ./dist/kylinpkg_0.2.7_all.deb
 sudo apt -f install
 ```
 
@@ -24,7 +24,7 @@ sudo apt -f install
 | CLI | `/usr/bin/kylinpkg` → `/opt/kylinpkg/bin/kylinpkg` |
 | GUI | `/usr/bin/kylinpkg-gui` → `/opt/kylinpkg/bin/kylinpkg-gui` |
 | 桌面文件 | `/usr/share/applications/kylinpkg.desktop` |
-| 图标 | `/usr/share/icons/hicolor/scalable/apps/kylinpkg.svg` |
+| 图标 | `/usr/share/icons/hicolor/`（scalable SVG + 16–256px PNG） |
 | 文档 | `/usr/share/doc/kylinpkg/` |
 | 收集脚本 | `/opt/kylinpkg/collector/kylinpkg-collect.sh` |
 

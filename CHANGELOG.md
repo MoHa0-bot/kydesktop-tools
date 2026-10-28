@@ -7,6 +7,18 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.2.7] - 2026-10-28
+
+### 修复：GUI 窗口与任务栏没有图标
+
+- 新增随包分发的多尺寸 PNG 图标（`kylinpkg/resources/icons/`，
+  16–256px），GUI 启动时通过 `iconphoto` 设置 `_NET_WM_ICON`，
+  标题栏与任务栏恢复正常显示。
+- `tk.Tk(className="Kylinpkg")` 写入 WM_CLASS，`.desktop` 补充
+  `StartupWMClass=Kylinpkg`，启动器可正确关联窗口。
+- deb 打包时同时安装 hicolor 各尺寸位图（`build-deb.sh`）。
+- 版本号更新为 0.2.7。
+
 ## [0.2.6] - 2026-10-27
 
 ### 源预设按官方外网源清单整体重建

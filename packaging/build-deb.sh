@@ -51,11 +51,19 @@ chmod 755 \
 ln -s /opt/kylinpkg/bin/kylinpkg "$STAGE/usr/bin/kylinpkg"
 ln -s /opt/kylinpkg/bin/kylinpkg-gui "$STAGE/usr/bin/kylinpkg-gui"
 
-# 桌面文件与图标
+# 桌面文件与图标（SVG 供应用菜单使用；PNG 供 tkinter 窗口/任务栏
+# 通过 iconphoto 加载，并补充 hicolor 位图尺寸）
 install -m 644 "$PROJECT_DIR/packaging/kylinpkg.desktop" \
     "$STAGE/usr/share/applications/kylinpkg.desktop"
 install -m 644 "$PROJECT_DIR/packaging/kylinpkg.svg" \
     "$STAGE/usr/share/icons/hicolor/scalable/apps/kylinpkg.svg"
+for sz in 16 32 48 64 128 256; do
+    png="$PROJECT_DIR/kylinpkg/resources/icons/kylinpkg-${sz}.png"
+    [ -f "$png" ] || { echo "缺少图标：$png" >&2; exit 1; }
+    dir="$STAGE/usr/share/icons/hicolor/${sz}x${sz}/apps"
+    mkdir -p "$dir"
+    install -m 644 "$png" "$dir/kylinpkg.png"
+done
 
 # 文档
 install -m 644 "$PROJECT_DIR/README.md" "$STAGE/usr/share/doc/kylinpkg/README.md"
