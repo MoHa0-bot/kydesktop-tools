@@ -7,6 +7,22 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.1] - 2026-10-28
+
+### 变更：GUI 界面优化
+
+- **导入其他主机配置**对话框重排：拆为「1 · 选择收集包」「2 · 导入设置」
+  两个分组，各输入行的灰色提示移到输入框下方独立成行，避免窄窗口下被
+  裁剪；「导入」按钮改用蓝色强调样式，与主界面「下载」按钮一致。
+- 收集包文件选择窗口默认打开**当前用户的桌面目录**（麒麟的 `~/桌面`、
+  通用环境的 `~/Desktop`，缺失时回退用户主目录），不用再翻目录找收集包。
+- 架构下拉选项去掉别名括号：直接显示 `amd64`、`arm64`、`mips64el` 等
+  dpkg 架构名（`i386`、`amd64,i386` 保留说明文字）；删除下载参数行右侧
+  的灰色别名提示「aarch64→arm64，mips64→mips64el」。
+- 修复窄窗口下顶部按钮显示不全：把「隔离 apt root…状态目录」长说明从
+  顶部移到底部状态栏（窄窗口时优先让位），顶部按钮行改为先布局，窗口
+  最窄时按钮仍完整可点。
+
 ## [0.3.0] - 2026-10-28
 
 ### 新增：下载任务记录（查询 / 重新下载 / 套用配置）
@@ -263,7 +279,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.1
 [0.3.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.0
 [0.2.9]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.9
 [0.2.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.8

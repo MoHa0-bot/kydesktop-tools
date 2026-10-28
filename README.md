@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.0**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.3.1**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
 PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
 （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
@@ -60,14 +60,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.0_all.deb
+sudo dpkg -i ./kylinpkg_0.3.1_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.0_all.deb
+sudo dpkg -i ./kylinpkg_0.3.1_all.deb
 ```
 
 安装后的路径：
@@ -120,8 +120,8 @@ GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），
    - `下载`：复用同一套隔离 apt root，执行 `apt-get install --download-only`，
      校验哈希、生成 `manifest.json`，可选择同时生成离线 apt 源。
 
-**架构是下拉选择**：`amd64`、`arm64`（aarch64）、`mips64el`（mips64）、
-`loongarch64`、`i386`，以及 `amd64,i386` 组合。已有的 profile 若带其他架构，
+**架构是下拉选择**：`amd64`、`arm64`、`mips64el`、`loongarch64`、`i386`，
+以及 `amd64,i386` 组合。已有的 profile 若带其他架构，
 选中时会动态显示，但默认选项只保留上述几个。
 
 解析/下载在后台线程执行，界面不会卡住；日志区会显示 apt 的解析结果、下载结果和警告。
@@ -160,7 +160,8 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 ```
 
 也可以直接在 GUI 顶部点 **“导入其他主机配置”**，选择 tar.gz 并填写名称；
-对话框里还提供 **“下载收集脚本”** 和 **“使用手册”** 按钮，可把
+对话框分「选择收集包」「导入设置」两步，文件选择窗口默认打开当前用户的
+桌面目录；对话框里还提供 **“下载收集脚本”** 和 **“使用手册”** 按钮，可把
 `collector/kylinpkg-collect.sh` 和说明文档另存到任意位置。
 
 收集包包含：

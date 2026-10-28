@@ -55,13 +55,14 @@ _MONO_FONTS = (
 
 AUTO_ARCH_LABEL = "自动检测（按源/目标机）"
 
-# 已确认的架构选项。GUI 显示带别名的标签，内部仍使用 dpkg 架构名。
+# 已确认的架构选项。GUI 直接显示 dpkg 架构名，内部仍使用 dpkg 架构名；
+# 常见别名（x86_64/aarch64/mips64 等）在 arch.normalize_arch 中统一归一化。
 # 已存在的 profile 若带其他架构（例如 sw64），会在选中时动态加入下拉框，
 # 但不作为默认选项展示。
 ARCH_OPTIONS = (
-    ("amd64", "amd64（x86_64）"),
-    ("arm64", "arm64（aarch64）"),
-    ("mips64el", "mips64el（mips64）"),
+    ("amd64", "amd64"),
+    ("arm64", "arm64"),
+    ("mips64el", "mips64el"),
     ("loongarch64", "loongarch64"),
     ("i386", "i386（32 位 x86）"),
     ("amd64,i386", "amd64,i386（x86 + 32 位库）"),
@@ -175,6 +176,22 @@ class App:
             style = ttk.Style(self.root)
             if "clam" in style.theme_names():
                 style.theme_use("clam")
+            # 主操作按钮（导入/下载等）使用强调色，视觉上与次要按钮区分。
+            style.configure(
+                "Accent.TButton",
+                background="#2563eb",
+                foreground="#ffffff",
+                bordercolor="#1d4ed8",
+                focuscolor="#ffffff",
+                font=("TkDefaultFont", 10, "bold"),
+                padding=(14, 4),
+            )
+            style.map(
+                "Accent.TButton",
+                background=[("pressed", "#1e40af"), ("active", "#1d4ed8"), ("disabled", "#93b4f5")],
+                foreground=[("disabled", "#e5e7eb")],
+            )
+            style.configure("Hint.TLabel", foreground="#6b7280")
         except Exception:
             pass
 
@@ -188,29 +205,27 @@ class App:
 
         header = ttk.Frame(main)
         header.grid(row=0, column=0, sticky="ew")
+        # 先 pack 右侧按钮、再 pack 左侧标题：窗口变窄时标题先让位，
+        # 按钮不会被挤出可视区域。
+        history_button = ttk.Button(header, text="任务记录", command=self._history_dialog)
+        history_button.pack(side="right", padx=(0, 0))
+        self._action_widgets.append(history_button)
+        cache_button = ttk.Button(header, text="清理缓存", command=self._clear_cache)
+        cache_button.pack(side="right", padx=(6, 0))
+        self._action_widgets.append(cache_button)
+        bundle_button = ttk.Button(
+            header, text="导入其他主机配置", command=self._bundle_import_dialog
+        )
+        bundle_button.pack(side="right", padx=(6, 0))
+        self._action_widgets.append(bundle_button)
+        refresh_button = ttk.Button(header, text="刷新列表", command=self._refresh_if_idle)
+        refresh_button.pack(side="right", padx=(6, 0))
+        self._action_widgets.append(refresh_button)
         ttk.Label(
             header,
             text="kylinpkg · 麒麟 deb 离线下载器",
             font=("TkDefaultFont", 13, "bold"),
         ).pack(side="left")
-        ttk.Label(
-            header,
-            text="隔离 apt root，不改本机；状态目录：%s" % self.state.root,
-        ).pack(side="right")
-        refresh_button = ttk.Button(header, text="刷新列表", command=self._refresh_if_idle)
-        refresh_button.pack(side="right", padx=(0, 12))
-        self._action_widgets.append(refresh_button)
-        bundle_button = ttk.Button(
-            header, text="导入其他主机配置", command=self._bundle_import_dialog
-        )
-        bundle_button.pack(side="right", padx=(0, 6))
-        self._action_widgets.append(bundle_button)
-        cache_button = ttk.Button(header, text="清理缓存", command=self._clear_cache)
-        cache_button.pack(side="right", padx=(0, 6))
-        self._action_widgets.append(cache_button)
-        history_button = ttk.Button(header, text="任务记录", command=self._history_dialog)
-        history_button.pack(side="right", padx=(0, 6))
-        self._action_widgets.append(history_button)
         self.root.bind("<F5>", lambda _event: self._refresh_if_idle())
 
         sources = ttk.Frame(main)
@@ -334,9 +349,6 @@ class App:
             values=_arch_labels(),
         )
         self.arch_combo.pack(side="left")
-        ttk.Label(
-            row1, text="aarch64→arm64，mips64→mips64el", foreground="#777777"
-        ).pack(side="left", padx=(6, 0))
 
         row2 = ttk.Frame(frame)
         row2.pack(fill="x", pady=2)
@@ -346,7 +358,11 @@ class App:
         )
         self._add_action_button(row2, "选择版本", self._open_version_picker)
         self._add_action_button(row2, "解析计划", self._on_resolve)
-        self._add_action_button(row2, "下载", self._on_download)
+        download_button = ttk.Button(
+            row2, text="下载", style="Accent.TButton", command=self._on_download
+        )
+        download_button.pack(side="left")
+        self._action_widgets.append(download_button)
         self.cancel_btn = ttk.Button(
             row2, text="中断", command=self._cancel_task, state="disabled"
         )
@@ -409,6 +425,10 @@ class App:
         )
         self.progress = ttk.Progressbar(frame, mode="indeterminate", length=180)
         self.progress.pack(side="right")
+        # 状态目录等长说明放到底部状态栏：窗口变窄时优先让位，不影响操作。
+        ttk.Label(frame, text="隔离 apt root，不改本机；状态目录：%s" % self.state.root).pack(
+            side="right", padx=(0, 8)
+        )
 
     def _build_menu(self) -> None:
         menubar = tk.Menu(self.root)
@@ -639,10 +659,30 @@ class App:
             self._output_auto = False
 
     # --------------------------------------------------------------- import
-    def _pick_file(self, var: tk.StringVar, title: str, patterns) -> None:
-        chosen = filedialog.askopenfilename(parent=self.root, title=title, filetypes=patterns)
+    def _pick_file(
+        self, var: tk.StringVar, title: str, patterns, initialdir: Optional[Path] = None
+    ) -> None:
+        kwargs: Dict[str, object] = {}
+        if initialdir is not None:
+            kwargs["initialdir"] = str(initialdir)
+        chosen = filedialog.askopenfilename(
+            parent=self.root, title=title, filetypes=patterns, **kwargs
+        )
         if chosen:
             var.set(chosen)
+
+    @staticmethod
+    def _user_pick_dir() -> Path:
+        """文件选择框的默认目录：当前用户桌面，缺失时回退用户主目录。
+
+        麒麟（UKUI）的桌面目录是 ~/桌面，通用环境是 ~/Desktop。
+        """
+        home = Path.home()
+        for name in ("桌面", "Desktop"):
+            candidate = home / name
+            if candidate.is_dir():
+                return candidate
+        return home
 
     def _pick_dir(self, var: tk.StringVar, title: str) -> None:
         chosen = filedialog.askdirectory(parent=self.root, title=title)
@@ -1424,71 +1464,95 @@ class App:
         win = tk.Toplevel(self.root)
         win.title("导入其他主机配置")
         win.transient(self.root)
-        win.columnconfigure(1, weight=1)
+        win.columnconfigure(0, weight=1)
 
-        archive_var = tk.StringVar()
-        profile_var = tk.StringVar()
-        baseline_var = tk.StringVar()
-        arch_var = tk.StringVar(value=AUTO_ARCH_LABEL)
-        bind_var = tk.BooleanVar(value=True)
-        force_var = tk.BooleanVar(value=False)
+        container = ttk.Frame(win, padding=16)
+        container.grid(row=0, column=0, sticky="nsew")
+        container.columnconfigure(0, weight=1)
 
-        hint = ttk.Frame(win)
-        hint.grid(row=0, column=0, columnspan=3, sticky="ew", padx=8, pady=(8, 2))
+        # ── 顶部说明与资料下载 ──────────────────────────────────
+        intro = ttk.Frame(container)
+        intro.grid(row=0, column=0, sticky="ew")
         ttk.Label(
-            hint,
+            intro,
             text="先在原始主机上运行收集脚本生成收集包，再在此导入。",
-            foreground="#777777",
+            style="Hint.TLabel",
         ).pack(side="left")
         ttk.Button(
-            hint,
+            intro,
             text="使用手册",
             command=lambda: self._save_collector_asset(
                 "README.md", "kylinpkg-collect-使用手册.md", win
             ),
         ).pack(side="right")
         ttk.Button(
-            hint,
+            intro,
             text="下载收集脚本",
             command=lambda: self._save_collector_asset(
                 "kylinpkg-collect.sh", "kylinpkg-collect.sh", win
             ),
         ).pack(side="right", padx=(0, 6))
 
-        self._dialog_row(
-            win,
-            1,
-            "收集包文件：",
-            archive_var,
-            "选择",
-            lambda: self._pick_file(
+        # ── 第 1 步：选择收集包 ─────────────────────────────────
+        step1 = ttk.LabelFrame(container, text=" 1 · 选择收集包 ", padding=10)
+        step1.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        step1.columnconfigure(1, weight=1)
+        archive_var = tk.StringVar()
+        ttk.Label(step1, text="收集包文件：").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Entry(step1, textvariable=archive_var).grid(
+            row=0, column=1, sticky="ew", padx=4, pady=4
+        )
+        ttk.Button(
+            step1,
+            text="选择",
+            command=lambda: self._pick_file(
                 archive_var,
                 "选择收集包",
                 (("kylinpkg 收集包", "*.tar.gz *.tgz"), ("所有文件", "*")),
+                initialdir=self._user_pick_dir(),
             ),
+        ).grid(row=0, column=2, padx=(4, 0), pady=4)
+        ttk.Label(step1, text="文件选择窗口默认打开当前用户的桌面目录", style="Hint.TLabel").grid(
+            row=1, column=1, sticky="w", padx=4
         )
-        self._dialog_row(win, 2, "profile 名称：", profile_var, "")
-        ttk.Label(win, text="留空则用收集包中的主机名", foreground="#777777").grid(
-            row=2, column=2, sticky="w", padx=4
+
+        # ── 第 2 步：导入设置 ───────────────────────────────────
+        step2 = ttk.LabelFrame(container, text=" 2 · 导入设置 ", padding=10)
+        step2.grid(row=2, column=0, sticky="ew", pady=(12, 0))
+        step2.columnconfigure(1, weight=1)
+        profile_var = tk.StringVar()
+        baseline_var = tk.StringVar()
+        arch_var = tk.StringVar(value=AUTO_ARCH_LABEL)
+        bind_var = tk.BooleanVar(value=True)
+        force_var = tk.BooleanVar(value=False)
+
+        ttk.Label(step2, text="profile 名称：").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Entry(step2, textvariable=profile_var).grid(
+            row=0, column=1, sticky="ew", padx=4, pady=4
         )
-        self._dialog_row(win, 3, "baseline 名称：", baseline_var, "")
-        ttk.Label(win, text="留空则用 <profile>-baseline", foreground="#777777").grid(
-            row=3, column=2, sticky="w", padx=4
+        ttk.Label(
+            step2, text="留空则用收集包中的主机名", style="Hint.TLabel"
+        ).grid(row=1, column=0, columnspan=2, sticky="w", padx=(4, 0))
+        ttk.Label(step2, text="baseline 名称：").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Entry(step2, textvariable=baseline_var).grid(
+            row=2, column=1, sticky="ew", padx=4, pady=4
         )
-        ttk.Label(win, text="目标架构：").grid(row=4, column=0, sticky="w", padx=8, pady=4)
+        ttk.Label(
+            step2, text="留空则用 <profile>-baseline", style="Hint.TLabel"
+        ).grid(row=3, column=0, columnspan=2, sticky="w", padx=(4, 0))
+        ttk.Label(step2, text="目标架构：").grid(row=4, column=0, sticky="w", pady=4)
         ttk.Combobox(
-            win,
+            step2,
             textvariable=arch_var,
             values=_arch_labels(include_auto=True),
             state="readonly",
-            width=38,
         ).grid(row=4, column=1, sticky="ew", padx=4, pady=4)
         ttk.Label(
-            win, text="自动：使用包内 dpkg status 的架构", foreground="#777777"
-        ).grid(row=4, column=2, sticky="w", padx=4)
+            step2, text="自动：使用包内 dpkg status 的架构", style="Hint.TLabel"
+        ).grid(row=5, column=0, columnspan=2, sticky="w", padx=(4, 0))
 
-        options = ttk.Frame(win)
-        options.grid(row=5, column=1, columnspan=2, sticky="w", padx=4, pady=4)
+        options = ttk.Frame(step2)
+        options.grid(row=6, column=0, columnspan=3, sticky="w", pady=(8, 0))
         ttk.Checkbutton(
             options, text="绑定为 profile 默认基线", variable=bind_var
         ).pack(side="left")
@@ -1496,8 +1560,9 @@ class App:
             options, text="覆盖同名 profile/baseline", variable=force_var
         ).pack(side="left", padx=(14, 0))
 
-        buttons = ttk.Frame(win)
-        buttons.grid(row=6, column=0, columnspan=3, sticky="e", padx=8, pady=(8, 10))
+        # ── 底部操作按钮 ────────────────────────────────────────
+        buttons = ttk.Frame(container)
+        buttons.grid(row=3, column=0, sticky="ew", pady=(14, 0))
 
         def do_import() -> None:
             archive = archive_var.get().strip()
@@ -1541,7 +1606,9 @@ class App:
             self._release_grab(win)
             win.destroy()
 
-        ttk.Button(buttons, text="导入", command=do_import).pack(side="right", padx=(6, 0))
+        ttk.Button(buttons, text="导入", style="Accent.TButton", command=do_import).pack(
+            side="right", padx=(8, 0)
+        )
         ttk.Button(
             buttons, text="取消", command=lambda: (self._release_grab(win), win.destroy())
         ).pack(side="right")
