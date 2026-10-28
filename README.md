@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.2.9**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.3.0**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
 PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
 （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
@@ -60,14 +60,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.2.9_all.deb
+sudo dpkg -i ./kylinpkg_0.3.0_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.2.9_all.deb
+sudo dpkg -i ./kylinpkg_0.3.0_all.deb
 ```
 
 安装后的路径：
@@ -97,10 +97,15 @@ sudo dpkg -i ./kylinpkg_0.2.9_all.deb
 GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），
 在 GUI 里导入的 profile/baseline 可以直接被命令行使用，反之亦然。
 
-界面分三块（顶部另有 **“导入其他主机配置”** 和 **“清理缓存”** 按钮）：
+界面分三块（顶部另有 **“导入其他主机配置”**、**“任务记录”** 和 **“清理缓存”** 按钮）：
 
 菜单栏的 **帮助 → 使用手册** 会用系统默认程序打开 PDF 版使用手册
 （`docs/kylinpkg-manual.pdf`，随 deb 一起安装到 `/opt/kylinpkg/docs/`）。
+
+顶部的 **“任务记录”** 打开下载历史对话框：每次下载（含失败/中断）都会留痕，
+可查看任务的时间、状态、profile、架构、软件包与输出目录，支持
+**重新下载**（按原配置重跑）、**应用到当前参数**（自动填入下载表单，
+双击记录同效）和删除单条记录。
 
 1. **apt 源配置（profile）**：按钮行保持 `从预设创建`、`从本机导入`、
    `编辑源配置`、`更多`、`删除` 一行显示；`导入源配置`（自定义
@@ -442,6 +447,33 @@ out/arm64/
 ```
 
 `manifest.json` 是自校验清单；`kylinpkg verify DIR` 会逐包重算 SHA256，并核对 Packages 索引。
+
+## 下载任务记录
+
+每次 `kylinpkg download`（CLI 或 GUI，无论成功、失败还是中断）都会自动把任务
+配置和结果记入状态目录的 `history.json`（默认保留最近 200 条）：
+
+```bash
+# 查询任务记录
+./bin/kylinpkg history list            # 最近的任务（时间、状态、profile、包、输出目录）
+./bin/kylinpkg history list --limit 20
+./bin/kylinpkg history show <ID>       # 详情 + 可直接复制的等价命令
+
+# 按历史任务的配置重新下载（输出目录、软件包、基线等全部沿用原任务）
+./bin/kylinpkg history redo <ID>
+./bin/kylinpkg history redo <ID> -o ./out/new-dir --force --repo
+
+# 管理记录（不影响已下载的文件）
+./bin/kylinpkg history remove <ID>
+./bin/kylinpkg history clear --yes
+```
+
+- 任务 ID 支持唯一前缀缩写；
+- 重做时会重新解析依赖（源里的版本可能已变化），完成后同样写入一条新记录；
+- `history show` 会打印该任务的**等价命令**，复制出来改成当前任务即可——
+  这就是“把历史任务的配置应用到当前”；
+- 对应的 GUI 入口：顶部 **“任务记录”** 按钮，可查询、**重新下载**、
+  **应用到当前参数**（自动填表：profile/基线/架构/软件包/输出目录/选项）和删除记录。
 
 ## 目标机怎么用
 

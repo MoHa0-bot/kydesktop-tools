@@ -27,7 +27,7 @@ from tkinter import filedialog, font as tkfont, messagebox, simpledialog, ttk
 from . import __version__
 from . import baseline as baseline_mod
 from . import bundle as bundle_mod
-from . import downloader, presets as presets_mod, profile as profile_mod, resolver
+from . import downloader, history as history_mod, presets as presets_mod, profile as profile_mod, resolver
 from . import deb822
 from .arch import arch_key, detect_system_archs, parse_arch_list
 from .config import State, default_output_dir
@@ -208,6 +208,9 @@ class App:
         cache_button = ttk.Button(header, text="清理缓存", command=self._clear_cache)
         cache_button.pack(side="right", padx=(0, 6))
         self._action_widgets.append(cache_button)
+        history_button = ttk.Button(header, text="任务记录", command=self._history_dialog)
+        history_button.pack(side="right", padx=(0, 6))
+        self._action_widgets.append(history_button)
         self.root.bind("<F5>", lambda _event: self._refresh_if_idle())
 
         sources = ttk.Frame(main)
@@ -2132,6 +2135,178 @@ class App:
         self.log_text.configure(state="normal")
         self.log_text.delete("1.0", "end")
         self.log_text.configure(state="disabled")
+
+    # ------------------------------------------------------- 任务记录
+    def _history_dialog(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("下载任务记录")
+        win.geometry("1040x540")
+        win.transient(self.root)
+        frame = ttk.Frame(win, padding=10)
+        frame.pack(fill="both", expand=True)
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
+
+        tree = ttk.Treeview(
+            frame,
+            columns=("time", "status", "profile", "arch", "baseline", "packages", "output"),
+            show="headings",
+            selectmode="browse",
+        )
+        for col, head, width in (
+            ("time", "时间", 150),
+            ("status", "状态", 60),
+            ("profile", "profile", 120),
+            ("arch", "架构", 100),
+            ("baseline", "基线", 110),
+            ("packages", "软件包", 230),
+            ("output", "输出目录", 230),
+        ):
+            tree.heading(col, text=head)
+            tree.column(col, width=width, minwidth=50, stretch=True)
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+
+        entries: Dict[str, Dict[str, object]] = {}
+
+        def refresh() -> None:
+            selected = tree.selection()
+            tree.delete(*tree.get_children())
+            entries.clear()
+            for entry in history_mod.list_tasks(self.state):
+                task_id = str(entry.get("id") or "")
+                entries[task_id] = entry
+                baseline = entry.get("baseline")
+                tree.insert(
+                    "",
+                    "end",
+                    iid=task_id,
+                    values=(
+                        str(entry.get("created_at", "")).replace("T", " "),
+                        history_mod.status_label(str(entry.get("status", ""))),
+                        entry.get("profile", ""),
+                        ",".join(str(a) for a in entry.get("architectures") or []),
+                        baseline if baseline else "全量",
+                        " ".join(str(s) for s in entry.get("requested") or []),
+                        entry.get("output", ""),
+                    ),
+                )
+            if selected:
+                try:
+                    tree.selection_set(selected[0])
+                    tree.see(selected[0])
+                except tk.TclError:
+                    pass
+
+        def selected_entry() -> Optional[Dict[str, object]]:
+            selection = tree.selection()
+            if not selection:
+                messagebox.showinfo("任务记录", "请先选择一条任务记录", parent=win)
+                return None
+            return entries.get(selection[0])
+
+        def redo() -> None:
+            entry = selected_entry()
+            if entry is None:
+                return
+            if self.busy:
+                messagebox.showinfo("任务记录", "当前有任务正在执行，请等它结束后再试", parent=win)
+                return
+
+            def work() -> str:
+                result = history_mod.redo_task(self.state, entry, log=self._log)
+                if result.get("reused"):
+                    return "重新下载：结果已存在且校验通过，未重复下载"
+                return "重新下载完成：%s 个包，%s" % (
+                    result.get("total", 0),
+                    human_size(int(result.get("total_bytes", 0))),
+                )
+
+            def done(text: object) -> None:
+                refresh()
+                self.status_var.set(str(text))
+
+            self._start_task(work, "重新下载", on_success=done)
+
+        def apply_to_current() -> None:
+            entry = selected_entry()
+            if entry is None:
+                return
+            try:
+                self._apply_history_params(entry)
+            except KylinPkgError as exc:
+                messagebox.showerror("套用失败", str(exc), parent=win)
+                return
+            win.destroy()
+
+        def remove_record() -> None:
+            entry = selected_entry()
+            if entry is None:
+                return
+            if not messagebox.askyesno(
+                "删除记录",
+                "删除任务 %s 的记录？\n已下载的文件不受影响。"
+                % entry.get("id"),
+                parent=win,
+            ):
+                return
+            try:
+                history_mod.remove_task(self.state, str(entry.get("id")))
+            except KylinPkgError as exc:
+                messagebox.showerror("删除失败", str(exc), parent=win)
+                return
+            refresh()
+
+        buttons = ttk.Frame(frame)
+        buttons.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        ttk.Button(buttons, text="重新下载", command=redo).pack(side="left")
+        ttk.Button(buttons, text="应用到当前参数", command=apply_to_current).pack(
+            side="left", padx=(6, 0)
+        )
+        ttk.Button(buttons, text="删除记录", command=remove_record).pack(
+            side="left", padx=(6, 0)
+        )
+        ttk.Button(buttons, text="刷新", command=refresh).pack(side="left", padx=(6, 0))
+        ttk.Button(buttons, text="关闭", command=win.destroy).pack(side="right")
+        tree.bind("<Double-1>", lambda _event: apply_to_current())
+
+        refresh()
+        self._center_dialog(win)
+
+    def _apply_history_params(self, entry: Dict[str, object]) -> None:
+        """把一条历史任务的配置套用到当前下载参数（表单）。"""
+        profile = str(entry.get("profile") or "")
+        if profile:
+            names = list(self.profile_combo["values"] or ())
+            if profile not in names:
+                raise KylinPkgError(
+                    "profile %s 已不存在，无法套用；请先重新导入源配置" % profile
+                )
+            self.refresh_profiles(select=profile)
+        baseline = entry.get("baseline")
+        values = list(self.baseline_combo["values"] or ())
+        if baseline and baseline != baseline_mod.RESERVED_EMPTY and baseline in values:
+            self.baseline_var.set(str(baseline))
+        else:
+            if baseline and baseline != baseline_mod.RESERVED_EMPTY:
+                self._append_log("警告：baseline %s 已不存在，已改为全量闭包" % baseline)
+            self.baseline_var.set(FULL_LABEL)
+        archs = ",".join(str(a) for a in entry.get("architectures") or [])
+        if archs:
+            self._set_arch_value(archs)
+        packages = " ".join(str(s) for s in entry.get("requested") or [])
+        if packages:
+            self.packages_var.set(packages)
+        output = str(entry.get("output") or "")
+        if output:
+            self.output_var.set(output)
+            self._output_auto = False
+        self.recommends_var.set(bool(entry.get("recommends", True)))
+        self.with_dependencies_var.set(bool(entry.get("with_dependencies", True)))
+        self.repo_var.set(bool(entry.get("make_repo", False)))
+        self.status_var.set("已套用任务 %s 的配置" % entry.get("id"))
 
     # --------------------------------------------------------------- misc
     def _open_output_dir(self) -> None:

@@ -37,6 +37,7 @@ class State:
         self.roots_dir = self.root / "roots"
         self.downloads_dir = self.root / "downloads"
         self.logs_dir = self.root / "logs"
+        self.history_file = self.root / "history.json"
 
     def ensure(self) -> "State":
         ensure_dir(self.root, 0o700)

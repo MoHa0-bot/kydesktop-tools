@@ -6,9 +6,10 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 from urllib.parse import unquote, urlsplit
 
+from . import history as history_mod
 from . import manifest as manifest_mod
 from . import repo as repo_mod
 from .aptroot import AptRoot
@@ -17,6 +18,7 @@ from .resolver import PlanEntry, ResolvePlan
 from .util import (
     CancelToken,
     KylinPkgError,
+    OperationCancelled,
     atomic_write_text,
     ensure_dir,
     hash_file,
@@ -128,6 +130,71 @@ def _identity(entry: PlanEntry) -> Tuple[str, str, str]:
 
 
 def download(
+    state: State,
+    plan: ResolvePlan,
+    output_dir: Path,
+    force: bool = False,
+    make_repo: bool = False,
+    cancel: Optional[CancelToken] = None,
+) -> Dict[str, object]:
+    """下载单个版本计划，并把任务写入历史记录（成功/失败/中断均记录）。"""
+    out_dir = Path(output_dir).expanduser()
+    return _record_and_run(
+        state,
+        [plan],
+        out_dir,
+        force,
+        make_repo,
+        cancel,
+        lambda: _download_single(state, plan, out_dir, force, make_repo, cancel),
+    )
+
+
+def _record_and_run(
+    state: State,
+    plans: Sequence[ResolvePlan],
+    output_dir: Path,
+    force: bool,
+    make_repo: bool,
+    cancel: Optional[CancelToken],
+    runner: "Callable[[], Dict[str, object]]",
+) -> Dict[str, object]:
+    """执行下载并记录任务历史；记录失败不影响下载本身。"""
+
+    def record(
+        status: str,
+        result: Optional[Dict[str, object]] = None,
+        error: Optional[str] = None,
+    ) -> None:
+        try:
+            history_mod.record_task(
+                state,
+                history_mod.build_entry(
+                    plans, output_dir, force, make_repo, status, result=result, error=error
+                ),
+            )
+        except Exception:  # noqa: BLE001 - 历史记录属于附带功能
+            pass
+
+    try:
+        result = runner()
+    except OperationCancelled as exc:
+        record(history_mod.STATUS_CANCELLED, error=str(exc))
+        raise
+    except KylinPkgError as exc:
+        record(history_mod.STATUS_FAILED, error=str(exc))
+        raise
+    except Exception as exc:  # noqa: BLE001 - 兜底记录后原样抛出
+        record(history_mod.STATUS_FAILED, error="%s: %s" % (type(exc).__name__, exc))
+        raise
+    record(
+        history_mod.STATUS_REUSED if result.get("reused") else history_mod.STATUS_OK,
+        result=result,
+    )
+    return result
+
+
+def _download_single(
     state: State,
     plan: ResolvePlan,
     output_dir: Path,
@@ -341,11 +408,31 @@ def download_plans(
     make_repo: bool = False,
     cancel: Optional[CancelToken] = None,
 ) -> Dict[str, object]:
-    """多个版本（多个 apt 事务）下载到同一个目录/离线源。"""
+    """多个版本（多个 apt 事务）下载到同一个目录/离线源（带任务历史记录）。"""
     if not plans:
         raise KylinPkgError("没有可下载的版本计划")
     if len(plans) == 1:
         return download(state, plans[0], output_dir, force, make_repo, cancel)
+    out_dir = Path(output_dir).expanduser()
+    return _record_and_run(
+        state,
+        plans,
+        out_dir,
+        force,
+        make_repo,
+        cancel,
+        lambda: _download_multi(state, plans, out_dir, force, make_repo, cancel),
+    )
+
+
+def _download_multi(
+    state: State,
+    plans: Sequence[ResolvePlan],
+    output_dir: Path,
+    force: bool = False,
+    make_repo: bool = False,
+    cancel: Optional[CancelToken] = None,
+) -> Dict[str, object]:
     first = plans[0]
     for plan in plans[1:]:
         if (

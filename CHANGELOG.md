@@ -7,6 +7,28 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.0] - 2026-10-28
+
+### 新增：下载任务记录（查询 / 重新下载 / 套用配置）
+
+- 新增 `kylinpkg/history.py`：每次 `download`（CLI 与 GUI 共用入口，
+  `downloader.download`/`download_plans`）无论成功、失败还是中断都会把
+  任务配置（profile、架构、基线、软件包、Recommends/依赖/离线源选项、
+  输出目录）和结果写入状态目录的 `history.json`，默认保留最近 200 条。
+- CLI 新增 `history` 子命令：
+  - `history list [--limit N] [--json]`：查询任务记录；
+  - `history show <ID>`：详情，并打印可直接复制的**等价命令**（把历史
+    配置套用到当前任务）；
+  - `history redo <ID> [-o DIR] [--force] [--repo|--no-repo]`：按历史任务
+    的配置重新解析并下载，输出目录等默认沿用原任务；
+  - `history remove <ID>`、`history clear --yes`：管理记录（不影响已
+    下载的文件）。任务 ID 支持唯一前缀缩写。
+- GUI 顶部新增 **“任务记录”** 按钮：对话框可查询任务的时间/状态/profile/
+  架构/软件包/输出目录，支持 **重新下载**（后台执行，日志区显示过程）、
+  **应用到当前参数**（自动填入下载表单，双击记录同效；profile/baseline
+  已删除时给出明确提示并回退全量闭包）和删除单条记录。
+- README 新增“下载任务记录”章节；版本号更新为 0.3.0。
+
 ## [0.2.9] - 2026-10-28
 
 ### 新增：PDF 使用手册与帮助菜单入口
@@ -241,7 +263,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.2.9...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.0
 [0.2.9]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.9
 [0.2.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.8
 [0.2.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.7

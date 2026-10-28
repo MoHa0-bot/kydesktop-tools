@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Sequence
 from . import __version__
 from . import baseline as baseline_mod
 from . import bundle as bundle_mod
-from . import downloader, presets as presets_mod, profile as profile_mod, repo as repo_mod, resolver
+from . import downloader, history as history_mod, presets as presets_mod, profile as profile_mod, repo as repo_mod, resolver
 from .arch import arch_key, detect_system_archs, parse_arch_list
 from .aptroot import AptRoot
 from .config import State, default_output_dir
@@ -537,6 +537,26 @@ def cmd_versions(args, state: State) -> int:
     return 0
 
 
+def _print_download_summary(out_dir: Path, result: Dict[str, object], make_repo: bool) -> None:
+    if result.get("reused"):
+        print("输出目录已有完整结果，校验通过，未重复下载：%s" % out_dir)
+    else:
+        print("下载完成：%s" % out_dir)
+        print("  包数：%s" % result.get("total", 0))
+        print("  本次新下载：%s" % result.get("downloaded", 0))
+        print("  总大小：%s" % human_size(int(result.get("total_bytes", 0))))
+        if int(result.get("plans", 1)) > 1:
+            print("  版本/请求组：%s" % result.get("plans"))
+    print("  manifest：%s" % (out_dir / "manifest.json"))
+    if make_repo:
+        if (out_dir / "sources.list").is_file():
+            print("  离线源：%s" % out_dir)
+            print("  目标机 sources：%s" % (out_dir / "sources.list"))
+        else:
+            print("  未生成离线源（没有可用的 .deb）")
+    _print_warnings(list(result.get("warnings") or []))
+
+
 def cmd_download(args, state: State) -> int:
     plans = _make_plans(args, state)
     if not args.quiet:
@@ -556,25 +576,117 @@ def cmd_download(args, state: State) -> int:
         result = downloader.download_plans(
             state, plans, out_dir, force=args.force, make_repo=args.repo
         )
-    if result.get("reused"):
-        print("输出目录已有完整结果，校验通过，未重复下载：%s" % out_dir)
-        if args.repo:
-            repo_mod.build_repo(out_dir)
-    else:
-        print("下载完成：%s" % out_dir)
-        print("  包数：%s" % result.get("total", 0))
-        print("  本次新下载：%s" % result.get("downloaded", 0))
-        print("  总大小：%s" % human_size(int(result.get("total_bytes", 0))))
-        if int(result.get("plans", 1)) > 1:
-            print("  版本/请求组：%s" % result.get("plans"))
-    print("  manifest：%s" % (out_dir / "manifest.json"))
-    if args.repo:
-        if (out_dir / "sources.list").is_file():
-            print("  离线源：%s" % out_dir)
-            print("  目标机 sources：%s" % (out_dir / "sources.list"))
-        else:
-            print("  未生成离线源（没有可用的 .deb）")
-    _print_warnings(list(result.get("warnings") or []))
+    if result.get("reused") and args.repo:
+        repo_mod.build_repo(out_dir)
+    _print_download_summary(out_dir, result, make_repo=args.repo)
+    return 0
+
+
+def cmd_history_list(args, state: State) -> int:
+    entries = history_mod.list_tasks(state, limit=args.limit)
+    if args.json:
+        print(json.dumps(entries, ensure_ascii=False, indent=2))
+        return 0
+    if not entries:
+        print("还没有下载任务记录。每次 kylinpkg download（CLI 或 GUI）都会自动记录。")
+        return 0
+    rows = []
+    for entry in entries:
+        packages = " ".join(entry.get("requested") or [])
+        if len(packages) > 38:
+            packages = packages[:37] + "…"
+        rows.append(
+            [
+                entry.get("id", "?"),
+                str(entry.get("created_at", "?")).replace("T", " "),
+                history_mod.status_label(str(entry.get("status", ""))),
+                entry.get("profile", "?"),
+                packages or "-",
+                entry.get("output", "-"),
+            ]
+        )
+    print(_table(["ID", "时间", "状态", "profile", "软件包", "输出目录"], rows))
+    print("\n详情：kylinpkg history show <ID>；重做：kylinpkg history redo <ID>")
+    return 0
+
+
+def cmd_history_show(args, state: State) -> int:
+    entry = history_mod.find_task(state, args.id)
+    if args.json:
+        print(json.dumps(entry, ensure_ascii=False, indent=2))
+        return 0
+    baseline = entry.get("baseline")
+    print("任务：%s" % entry.get("id"))
+    print("  时间：%s" % entry.get("created_at"))
+    print("  状态：%s" % history_mod.status_label(str(entry.get("status", ""))))
+    print("  profile：%s" % entry.get("profile"))
+    print("  架构：%s" % (", ".join(entry.get("architectures") or []) or "-"))
+    print("  基线：%s" % (baseline if baseline else "空（全量闭包）"))
+    print("  软件包：%s" % (" ".join(entry.get("requested") or []) or "-"))
+    print(
+        "  选项：Recommends=%s，依赖=%s，离线源=%s，覆盖=%s"
+        % (
+            "是" if entry.get("recommends", True) else "否",
+            "是" if entry.get("with_dependencies", True) else "否",
+            "是" if entry.get("make_repo") else "否",
+            "是" if entry.get("force") else "否",
+        )
+    )
+    print("  输出目录：%s" % entry.get("output"))
+    if entry.get("plans"):
+        print("  版本/请求组：%s" % entry.get("plans"))
+    if entry.get("package_count") is not None:
+        print(
+            "  结果：%s 个包，%s"
+            % (entry.get("package_count"), human_size(int(entry.get("total_bytes", 0) or 0)))
+        )
+    if entry.get("error"):
+        print("  错误：%s" % entry.get("error"))
+    print("\n套用到当前（等价命令）：")
+    print("  " + history_mod.equivalent_command(entry))
+    print("直接重做：kylinpkg history redo %s" % args.id)
+    return 0
+
+
+def cmd_history_redo(args, state: State) -> int:
+    entry = history_mod.find_task(state, args.id)
+    if args.repo and args.no_repo:
+        raise KylinPkgError("--repo 与 --no-repo 不能同时使用")
+    make_repo = True if args.repo else (False if args.no_repo else None)
+    out_dir = Path(args.output).expanduser() if args.output else None
+    result = history_mod.redo_task(
+        state,
+        entry,
+        output=out_dir,
+        force=args.force,
+        make_repo=make_repo,
+        log=None if args.quiet else print,
+    )
+    final_dir = (
+        Path(args.output).expanduser()
+        if args.output
+        else Path(str(entry.get("output"))).expanduser()
+    )
+    make_repo_effective = bool(
+        make_repo if make_repo is not None else entry.get("make_repo")
+    )
+    if result.get("reused") and make_repo_effective:
+        repo_mod.build_repo(final_dir)
+    _print_download_summary(final_dir, result, make_repo=make_repo_effective)
+    return 0
+
+
+def cmd_history_remove(args, state: State) -> int:
+    entry = history_mod.remove_task(state, args.id)
+    print("已删除任务记录：%s" % entry.get("id"))
+    return 0
+
+
+def cmd_history_clear(args, state: State) -> int:
+    if not args.yes:
+        raise KylinPkgError("将清空全部下载任务记录；确认请加 --yes")
+    count = history_mod.clear_tasks(state)
+    print("已清空 %d 条任务记录（已下载的结果文件不受影响）" % count)
     return 0
 
 
@@ -942,6 +1054,36 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_gc.add_argument("--profile", help="只清理某个 profile 的缓存")
     p_gc.set_defaults(func=cmd_gc)
+
+    p_hist = sub.add_parser("history", help="查询下载任务记录（重新下载 / 套用配置）")
+    p_hist_sub = p_hist.add_subparsers(dest="history_cmd", required=True)
+
+    p_hlist = p_hist_sub.add_parser("list", help="列出最近的下载任务")
+    p_hlist.add_argument("--limit", type=int, default=None, help="只显示最近 N 条")
+    p_hlist.add_argument("--json", action="store_true")
+    p_hlist.set_defaults(func=cmd_history_list)
+
+    p_hshow = p_hist_sub.add_parser("show", help="查看任务详情与等价命令")
+    p_hshow.add_argument("id", help="任务 ID（可唯一前缀）")
+    p_hshow.add_argument("--json", action="store_true")
+    p_hshow.set_defaults(func=cmd_history_show)
+
+    p_hredo = p_hist_sub.add_parser("redo", help="按历史任务的配置重新下载")
+    p_hredo.add_argument("id", help="任务 ID（可唯一前缀）")
+    p_hredo.add_argument("-o", "--output", help="输出目录；缺省沿用原任务目录")
+    p_hredo.add_argument("--force", action="store_true", help="覆盖已有输出目录")
+    p_hredo.add_argument("--repo", action="store_true", help="强制生成离线 apt 源")
+    p_hredo.add_argument("--no-repo", action="store_true", help="强制不生成离线 apt 源")
+    p_hredo.add_argument("--quiet", action="store_true", help="不打印解析过程")
+    p_hredo.set_defaults(func=cmd_history_redo)
+
+    p_hrm = p_hist_sub.add_parser("remove", help="删除一条任务记录")
+    p_hrm.add_argument("id", help="任务 ID（可唯一前缀）")
+    p_hrm.set_defaults(func=cmd_history_remove)
+
+    p_hclear = p_hist_sub.add_parser("clear", help="清空全部任务记录")
+    p_hclear.add_argument("--yes", action="store_true", help="确认清空")
+    p_hclear.set_defaults(func=cmd_history_clear)
 
     return parser
 

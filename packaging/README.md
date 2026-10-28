@@ -5,14 +5,14 @@ cd kydesktop-tools   # 仓库根目录
 ./packaging/build-deb.sh
 ```
 
-输出：`dist/kylinpkg_0.2.9_all.deb`
+输出：`dist/kylinpkg_0.3.0_all.deb`
 
 安装：
 
 ```bash
-sudo apt install ./dist/kylinpkg_0.2.9_all.deb
+sudo apt install ./dist/kylinpkg_0.3.0_all.deb
 # 或
-sudo dpkg -i ./dist/kylinpkg_0.2.9_all.deb
+sudo dpkg -i ./dist/kylinpkg_0.3.0_all.deb
 sudo apt -f install
 ```
 
