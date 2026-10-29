@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+- 新增：内置 3 条「现场实测」XC 通用版预设（`xc-2203-field` / `xc-2303-field`
+  / `xc-2503-field`），数据来自 2026-10 用收集脚本在 5 台现场主机采集的配置
+  包。已去重：sp1-2503 的 x86 / arm64 配置一致合并为一条；sp1-2403 与官方
+  清单 `xc-2403u2` 逐行一致，不再单列。现场机器与官方清单的差异如实收录：
+  2203 / 2303 的 archive2 走 `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite，
+  2503 实际使用 `10.1-2503-bugfix` suite、Pin-Priority 550 一档。
+  预设总数 42 → 45，`docs/kylin-desktop-sources.md` 新增第九节。
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
 ## [0.3.1] - 2026-10-28

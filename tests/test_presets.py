@@ -12,7 +12,7 @@ from kylinpkg.util import KylinPkgError
 
 class PresetsTest(unittest.TestCase):
     def test_catalog_is_parseable_and_unique(self):
-        self.assertEqual(len(presets.PRESETS), 42)
+        self.assertEqual(len(presets.PRESETS), 45)
         ids = [item.id for item in presets.PRESETS]
         self.assertEqual(len(ids), len(set(ids)))
         for item in presets.PRESETS:
@@ -32,8 +32,8 @@ class PresetsTest(unittest.TestCase):
             line.strip() for line in text.splitlines() if line.strip().startswith("deb ")
         ]
         preset_lines = [line for item in presets.PRESETS for line in item.sources]
-        self.assertEqual(len(md_lines), 208)
-        self.assertEqual(len(preset_lines), 208)
+        self.assertEqual(len(md_lines), 218)
+        self.assertEqual(len(preset_lines), 218)
 
         def normalize(line):
             return " ".join(line.split())
@@ -61,7 +61,7 @@ class PresetsTest(unittest.TestCase):
                 "V10 基础版（非 SP1，历史）",
             ],
         )
-        self.assertEqual(len(presets.list_presets("XC 产线（通用版）")), 6)
+        self.assertEqual(len(presets.list_presets("XC 产线（通用版）")), 9)
         self.assertEqual(len(presets.list_presets("HWE 硬件启用栈")), 10)
         self.assertEqual(
             sum(1 for item in presets.PRESETS if item.group.startswith("Wayland")), 24
@@ -75,7 +75,10 @@ class PresetsTest(unittest.TestCase):
         self.assertIn("10.1-kylin-2503", text)
         self.assertIn("10.1-2503-bugfix-limit", text)
         # 全目录不应再出现过时的 10.1-2503-bugfix（非 -limit）写法
+        # （xc-2503-field 除外：2026-10 现场实测机器确实在用非 -limit suite，如实收录）
         for item in presets.PRESETS:
+            if item.id == "xc-2503-field":
+                continue
             for line in item.sources:
                 parts = line.split()
                 self.assertNotIn(
@@ -101,9 +104,10 @@ class PresetsTest(unittest.TestCase):
 
     def test_preferences_are_recorded(self):
         with_pin = [item.id for item in presets.PRESETS if item.preferences]
-        self.assertEqual(len(with_pin), 11)
+        self.assertEqual(len(with_pin), 12)
         for preset_id in (
             "xc-2503",
+            "xc-2503-field",
             "hwe-2503",
             "hwe-pp-2503",
             "wl-2503-990",

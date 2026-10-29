@@ -182,11 +182,12 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   （原基线是 amd64 时不能绑定到 arm64 profile）。
 - 更多细节见 `collector/README.md`。
 
-## 内置源预设（42 个）
+## 内置源预设（45 个）
 
 数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，
 纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。
-共 42 个预设 / 208 条 `deb` 源行，其中 11 条附带 `kylin.pref` 优先级配置。
+共 45 个预设 / 218 条 `deb` 源行，其中 12 条附带 `kylin.pref` 优先级配置；
+另有 3 条为 2026-10 现场实测预设（见下文「现场实测预设」）。
 
 ```bash
 # 查看全部预设
@@ -209,7 +210,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 | 分组 | 数量 | ID |
 | --- | --- | --- |
-| XC 产线（通用版） | 6 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503` |
+| XC 产线（通用版） | 9 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503`、`xc-2203-field`、`xc-2303-field`、`xc-2503-field`（后 3 条为现场实测） |
 | HWE 硬件启用栈 | 10 | `hwe-2107`、`hwe-2203`、`hwe-2303`、`hwe-2303u2`、`hwe-2403u2`、`hwe-2503`、`hwe-pp-2303`、`hwe-pp-2303u2`、`hwe-pp-2403u2`、`hwe-pp-2503` |
 | Wayland · 麒麟 990 | 6 | `wl-2107-990`、`wl-2203-990`、`wl-2303-990`、`wl-2303u2-990`、`wl-2403u2-990`、`wl-2503-990` |
 | Wayland · 麒麟 9006C | 6 | `wl-2107-9006c`、`wl-2203-9006c`、`wl-2303-9006c`、`wl-2303u2-9006c`、`wl-2403u2-9006c`、`wl-2503-9006c` |
@@ -234,6 +235,21 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 `preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。
 创建后可在“查看/编辑源配置”里直接修改。
 
+### 现场实测预设（`*-field`，2026-10 新增）
+
+来自用 `collector/kylinpkg-collect.sh` 在 5 台现场主机（均为 XC 通用版）收集的
+配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台。
+已按重复配置去重：
+
+- **`xc-2503-field`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条
+  （amd64 + arm64，含实测 `kylin.pref`：550 一档）；
+- **sp1-2403** 与官方清单 `xc-2403u2` 逐行一致，不再单列；
+- **`xc-2203-field` / `xc-2303-field`**：现场"源管理器"标准配置，
+  archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单
+  `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
+- sp1-2203 现场重复的 pref、sp1-2303 的单机本地源（`/opt/apps-third/`）
+  未收录，差异细节见 `docs/kylin-desktop-sources.md` 第九节。
+
 ### 与旧版源汇总的差异
 
 旧的《银河麒麟桌面版软件源地址汇总.md》已过时，本次按 xls 整体重建：
@@ -241,7 +257,8 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 - 预设 ID 全部改为 xls 的产线命名（`xc-*` / `hwe-*` / `wl-*`），
   旧的 `sp1-*` ID 不再存在；
 - 2503 的 bugfix suite 以 xls 为准统一为 `10.1-2503-bugfix-limit`
-  （旧文档写的 `10.1-2503-bugfix` 已被取代）；
+  （旧文档写的 `10.1-2503-bugfix` 已被取代）；现场实测机器实际在用
+  非 `-limit` 版本，故 `xc-2503-field` 如实保留 `10.1-2503-bugfix`；
 - 新增 `*-bugfix-limit`、`*-update3`（2303 update2 的更新层）、
   `10.1-2403-wayland-*` 系列 suite；
 - 新增 HWE-PP、盘古 M900、麒麟 9000C、华为 Pangux/Flemingx/Panguy/Panguw 等产线；

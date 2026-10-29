@@ -11,11 +11,19 @@
 另外保留 2 条 V10 非 SP1（10.0 系）历史预设——新的外网源清单不再收录它们，
 仅用于老机器。
 
+2026-10 起新增 3 条「现场实测」预设（`*-field`），数据来自用
+`collector/kylinpkg-collect.sh` 在 5 台现场主机（均为 XC 通用版）收集的配置包：
+sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台。已去重：
+2503 的 x86 / arm64 两台配置一致合并为一条；2403 与官方清单 `xc-2403u2`
+逐行一致不再单列。现场机器与官方清单的差异（如实收录）：
+2203 / 2303 的 archive2 走 `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite；
+2503 实际使用 `10.1-2503-bugfix` suite、Pin-Priority 为 550 一档。
+
 预设只是模板：创建成 profile 后可以自由查看、编辑。
 `docs/kylin-desktop-sources.md` 保存原始清单，`tests/test_presets.py` 会校验
 预设源行与清单一致。
 
-总计：42 个预设 / 208 条 `deb` 源行 / 11 条带优先级配置。
+总计：45 个预设 / 218 条 `deb` 源行 / 12 条带优先级配置。
 """
 
 from __future__ import annotations
@@ -33,6 +41,7 @@ _PARTNER = "http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/
 _KIRIN9A0S = "https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0"
 _KIRIN9A0 = "http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0"
 _KIRIN990 = "http://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin990/custom/partner/10_1-kirin990"
+_DEB = "http://archive2.kylinos.cn/DEB/KYLIN_DEB"
 
 
 @dataclass(frozen=True)
@@ -136,6 +145,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb %s default all" % _PARTNER,
         ],
         architectures=("amd64", "arm64", "loongarch64", "mips64el"),
+        notes=(
+            "2026-10 现场实测（sp1-2403-x86 收集包）的源配置与本预设逐行一致。",
+        )
     ),
     _p(
         "xc-2503",
@@ -170,6 +182,80 @@ PRESETS: Tuple[SourcePreset, ...] = (
         ),
         architectures=("amd64", "arm64", "loongarch64", "mips64el"),
         notes=("该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",)
+    ),
+    # ------------------------------------------------------------
+    # XC 产线（通用版）· 现场实测（主机收集）
+    _p(
+        "xc-2203-field",
+        "V10 SP1 XC-2203（现场实测）",
+        "XC 产线（通用版）",
+        "XC 2203 现场主机实测源（源管理器标准配置）",
+        [
+            "deb %s V10-SP1 main all" % _DEB,
+            "deb %s 10.1-2203-updates main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+        ],
+        architectures=("amd64",),
+        notes=(
+            "数据来自 2026-10 现场主机收集包（sp1-2203-x86）。",
+            "与官方清单 xc-2203 的差异：无 bugfix-limit / updates-preview suite；archive2 走 DEB/KYLIN_DEB 入口而非 PART partner 源。",
+            "现场机器 preferences.d 中 archive2.pref 与 archive3.pref 内容完全重复（源管理器自动生成），未收录进预设。",
+        )
+    ),
+    _p(
+        "xc-2303-field",
+        "V10 SP1 XC-2303（现场实测）",
+        "XC 产线（通用版）",
+        "XC 2303 现场主机实测源（源管理器标准配置）",
+        [
+            "deb %s 10.1-2303-updates main universe multiverse restricted" % _ARCH,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s V10-SP1 main all" % _DEB,
+        ],
+        architectures=("amd64",),
+        notes=(
+            "数据来自 2026-10 现场主机收集包（sp1-2303-x86）。",
+            "与官方清单 xc-2303 的差异：无 bugfix-limit suite；archive2 走 DEB/KYLIN_DEB 入口而非 PART partner 源。",
+            "现场机器另有单机本地源 /etc/apt/sources.list.d/kylin-apps-third.list（deb [trusted=yes] file:///opt/apps-third/ ./），未收录进预设。",
+        )
+    ),
+    _p(
+        "xc-2503-field",
+        "V10 SP1 XC-2503（现场实测）",
+        "XC 产线（通用版）",
+        "XC 2503 现场主机实测源（x86 / arm64 配置一致，含 kylin.pref 优先级）",
+        [
+            "deb %s 10.1-kylin main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH,
+            "deb %s default all" % _PARTNER,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-kylin-2503",
+            "Pin-Priority: 550",
+            "",
+            "Package: *",
+            "Pin: origin \"archive.kylinos.cn\"",
+            "Pin: release a=10.1-2503-bugfix",
+            "Pin-Priority: 550",
+            "",
+            "Package: *",
+            "Pin: origin \"archive2.kylinos.cn\"",
+            "Pin-Priority: 550",
+        ),
+        architectures=("amd64", "arm64"),
+        notes=(
+            "数据来自 2026-10 现场主机收集包（sp1-2503-x86 与 sp1-2503-arm64），两台主机配置一致，合并为一条预设。",
+            "现场机器实际使用 10.1-2503-bugfix suite（官方清单写 10.1-2503-bugfix-limit），Pin-Priority 为 550 一档（官方清单为 600），以现场实测为准。",
+            "该版本源配套 /etc/apt/preferences.d/kylin.pref 优先级配置，创建 profile 时会一并写入 profile 的 preferences.d/kylin.pref。",
+        )
     ),
     # ---------------------------------------------------------------
     # HWE 硬件启用栈

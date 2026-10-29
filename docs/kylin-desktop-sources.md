@@ -6,8 +6,9 @@
 > 本文档是清单的纯文本副本，`kylinpkg/presets.py` 与本文逐行对应，
 > `tests/test_presets.py` 会校验两者一致。
 
-总计 42 条配置 / 208 条 `deb` 源行，其中 11 条附带的
+总计 45 条配置 / 218 条 `deb` 源行，其中 12 条附带的
 `/etc/apt/preferences.d/kylin.pref` 优先级（Pin-Priority）设置也已收录。
+其中 3 条为 2026-10 现场实测预设（`*-field`，见第九节），其余 42 条来自 xls。
 
 ---
 
@@ -776,6 +777,74 @@ deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0-fixs main
 deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0 main restricted universe multiverse
 deb http://archive.kylinos.cn/kylin/partner juniper main
 deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 default all
+```
+
+---
+
+## 九、现场实测（主机收集，2026-10）
+
+> 以下 3 条预设来自用 `collector/kylinpkg-collect.sh` 在 5 台现场主机收集的
+> 配置包（sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台），
+> 均为 **XC 通用版**机器。去重说明：
+>
+> - sp1-2503 的 x86 与 arm64 两台配置一致，合并为一条 `xc-2503-field`；
+> - sp1-2403 的配置与官方清单 `xc-2403u2` 逐行一致，不再单列；
+> - sp1-2203 现场 `preferences.d` 里 `archive2.pref` 与 `archive3.pref`
+>   内容完全重复（源管理器自动生成），未收录；
+> - sp1-2303 现场另有单机本地源 `kylin-apps-third.list`
+>   （`deb [trusted=yes] file:///opt/apps-third/ ./`），未收录。
+>
+> 现场机器与官方清单的差异**如实收录**：2203 / 2303 的 archive2 走
+> `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite；2503 实际使用
+> `10.1-2503-bugfix`（非 `-limit`）suite，Pin-Priority 为 550 一档。
+
+### V10 SP1 XC-2203（现场实测）（xc-2203-field）
+
+```
+deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2203-updates main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
+```
+
+### V10 SP1 XC-2303（现场实测）（xc-2303-field）
+
+```
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2303-updates main universe multiverse restricted
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
+deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10-SP1 main all
+```
+
+### V10 SP1 XC-2503（现场实测）（xc-2503-field）
+
+```
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kylin-2503 main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2503-bugfix main restricted universe multiverse
+deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10-SP1/custom/partner/V10-SP1 default all
+```
+
+优先级设置【/etc/apt/preferences.d/kylin.pref】（现场实测为 550 一档，
+与官方清单 `xc-2503` 的 600 不同）：
+
+```
+Package: *
+Pin: origin "archive.kylinos.cn"
+Pin: release a=10.1-kylin
+Pin-Priority: 500
+
+Package: *
+Pin: origin "archive.kylinos.cn"
+Pin: release a=10.1-kylin-2503
+Pin-Priority: 550
+
+Package: *
+Pin: origin "archive.kylinos.cn"
+Pin: release a=10.1-2503-bugfix
+Pin-Priority: 550
+
+Package: *
+Pin: origin "archive2.kylinos.cn"
+Pin-Priority: 550
 ```
 
 ---
