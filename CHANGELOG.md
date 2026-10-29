@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+- 计划中：下载并发/断点续传、图形化 SSH 导入。
+
+## [0.3.3] - 2026-10-29
+
 - 变更：现场实测预设 ID 更名 `xc-2203-field` / `xc-2303-field` /
   `xc-2503-field` → `xc-2203-实机` / `xc-2303-实机` / `xc-2503-实机`；
   名称规则（`validate_name`）相应扩展为支持汉字。
@@ -14,7 +18,6 @@
   的同名基线不会被覆盖（同步标记：state `baselines/.builtin-sync.json`）。
   `baseline import --builtin` 保留，用于改名导入或手工恢复。后续新增内置
   基线只需向 `kylinpkg/resources/baselines/` 添加条目，无需改代码。
-- 计划中：下载并发/断点续传、图形化 SSH 导入。
 
 ## [0.3.2] - 2026-10-29
 

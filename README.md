@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.2**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.3.3**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
 PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
 （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
@@ -60,14 +60,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.2_all.deb
+sudo dpkg -i ./kylinpkg_0.3.3_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.2_all.deb
+sudo dpkg -i ./kylinpkg_0.3.3_all.deb
 ```
 
 安装后的路径：
