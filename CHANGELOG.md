@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+- 计划中：下载并发/断点续传、图形化 SSH 导入。
+
+## [0.3.2] - 2026-10-29
+
+### 新增：现场实测源预设与内置 dpkg 基线（0.3.1 之后的全部变更）
+
 - 新增：随包分发 5 份**内置现场基线**（dpkg 初始状态，`sp1-2203-x86` /
   `sp1-2303-x86` / `sp1-2403-x86` / `sp1-2503-x86` / `sp1-2503-arm64`），
   数据来自同一批 5 台 XC 通用版现场主机的收集包（status 以 gzip 存储，
@@ -19,7 +25,8 @@
   2203 / 2303 的 archive2 走 `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite，
   2503 实际使用 `10.1-2503-bugfix` suite、Pin-Priority 550 一档。
   预设总数 42 → 45，`docs/kylin-desktop-sources.md` 新增第九节。
-- 计划中：下载并发/断点续传、图形化 SSH 导入。
+- 打包：`pyproject.toml` 新增 `package-data` 配置，`resources/` 下的
+  图标与内置基线随 wheel/sdist 分发（此前的 wheel 配置遗漏了资源文件）。
 
 ## [0.3.1] - 2026-10-28
 
