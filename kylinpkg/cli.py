@@ -363,14 +363,20 @@ def cmd_preset_create(args, state: State) -> int:
 
 
 def cmd_baseline_import(args, state: State) -> int:
+    name = args.name
+    if getattr(args, "from_builtin", None) and not name:
+        name = args.from_builtin
+    if not name:
+        raise KylinPkgError("请提供 baseline 名称，或用 --builtin 时省略名称以内置名命名")
     meta = baseline_mod.import_baseline(
         state,
-        args.name,
+        name,
         status_file=args.status_file,
         from_system=args.from_system,
         from_ssh=args.from_ssh,
         from_rootfs=args.from_rootfs,
         empty=args.empty,
+        from_builtin=getattr(args, "from_builtin", None),
         note=args.note,
         force=args.force,
     )
@@ -385,21 +391,43 @@ def cmd_baseline_import(args, state: State) -> int:
 
 def cmd_baseline_list(args, state: State) -> int:
     items = baseline_mod.list_baselines(state)
-    if not items:
-        print("还没有 baseline。用 kylinpkg baseline import 导入 dpkg status。")
-        return 0
-    rows = [
-        [
-            meta.get("name", "?"),
-            meta.get("installed_count", 0),
-            meta.get("package_count", 0),
-            ",".join(meta.get("architectures") or []) or "-",
-            (meta.get("origin") or {}).get("kind", "-"),
-            meta.get("created_at", "-"),
-        ]
-        for meta in items
+    state_names = {meta.get("name") for meta in items}
+    builtin_items = [
+        meta
+        for meta in baseline_mod.list_builtin_baselines()
+        if meta.get("name") not in state_names
     ]
+    if not items and not builtin_items:
+        print("还没有 baseline。用 kylinpkg baseline import 导入 dpkg status，")
+        print("或用 kylinpkg baseline import <名称> --builtin <内置名> 创建内置现场基线。")
+        return 0
+    rows = []
+    for meta in items:
+        rows.append(
+            [
+                meta.get("name", "?"),
+                meta.get("installed_count", 0),
+                meta.get("package_count", 0),
+                ",".join(meta.get("architectures") or []) or "-",
+                (meta.get("origin") or {}).get("kind", "-"),
+                meta.get("created_at", "-"),
+            ]
+        )
+    for meta in builtin_items:
+        rows.append(
+            [
+                meta.get("name", "?") + " *",
+                meta.get("installed_count", 0),
+                meta.get("package_count", 0),
+                ",".join(meta.get("architectures") or []) or "-",
+                "内置（未导入）",
+                (meta.get("created_at") or "-")[:10],
+            ]
+        )
     print(_table(["名称", "已安装", "记录数", "架构", "来源", "创建时间"], rows))
+    if builtin_items:
+        print("说明：带 * 的为随包分发的内置现场基线，尚未导入本机；")
+        print("      用 kylinpkg baseline import <名称> --builtin <内置名> 创建可编辑副本。")
     return 0
 
 
@@ -960,8 +988,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_base = sub.add_parser("baseline", help="管理 dpkg status 基线")
     p_base_sub = p_base.add_subparsers(dest="baseline_cmd", required=True)
 
-    p_bimp = p_base_sub.add_parser("import", help="导入 dpkg status（文件/本机/SSH/rootfs/空）")
-    p_bimp.add_argument("name")
+    p_bimp = p_base_sub.add_parser(
+        "import", help="导入 dpkg status（内置/文件/本机/SSH/rootfs/空）"
+    )
+    p_bimp.add_argument("name", nargs="?", default="", help="baseline 名称（--builtin 时可省略）")
+    p_bimp.add_argument(
+        "--builtin", metavar="NAME", dest="from_builtin",
+        help="从随包分发的内置现场基线创建（kylinpkg baseline list 中带 * 的条目）",
+    )
     p_bimp.add_argument("--status-file", type=Path, help="dpkg status 文件")
     p_bimp.add_argument("--from-system", action="store_true", help="使用本机 /var/lib/dpkg/status")
     p_bimp.add_argument("--from-ssh", metavar="[USER@]HOST", help="读取远端 /var/lib/dpkg/status")

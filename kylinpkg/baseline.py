@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 import shutil
 from pathlib import Path
@@ -24,6 +25,9 @@ from .util import (
 )
 
 RESERVED_EMPTY = "empty"
+
+# 随包分发的内置现场基线（来自 kylinpkg-collect 收集包，status 以 gzip 存储）
+BUILTIN_BASELINES_DIR = Path(__file__).resolve().parent / "resources" / "baselines"
 
 
 def _status_bytes_from_system() -> bytes:
@@ -141,16 +145,40 @@ def import_baseline(
     from_ssh: Optional[str] = None,
     from_rootfs: Optional[Path] = None,
     empty: bool = False,
+    from_builtin: Optional[str] = None,
     note: str = "",
     force: bool = False,
 ) -> Dict[str, object]:
-    selectors = [status_file is not None, from_system, bool(from_ssh), from_rootfs is not None, empty]
+    selectors = [
+        status_file is not None,
+        from_system,
+        bool(from_ssh),
+        from_rootfs is not None,
+        empty,
+        from_builtin is not None,
+    ]
     if sum(1 for item in selectors if item) != 1:
         raise KylinPkgError(
-            "请且只指定一种来源：--status-file / --from-system / --from-ssh / --from-rootfs / --empty"
+            "请且只指定一种来源：--status-file / --from-system / --from-ssh /"
+            " --from-rootfs / --empty / --builtin"
         )
     if empty:
         return _write_baseline(state, name, b"", "empty", "空基线（全量闭包）", note, force)
+    if from_builtin is not None:
+        builtin_meta = get_builtin_baseline_meta(from_builtin)
+        detail = "内置基线 %s（收集包 %s）" % (
+            from_builtin,
+            builtin_meta.get("source_bundle", "?"),
+        )
+        return _write_baseline(
+            state,
+            name,
+            _builtin_status_bytes(from_builtin),
+            "builtin",
+            detail,
+            note,
+            force,
+        )
     if status_file is not None:
         path = Path(status_file).expanduser()
         if not path.is_file():
@@ -184,6 +212,40 @@ def import_baseline(
             force,
         )
     raise KylinPkgError("没有可用的 baseline 来源")
+
+
+def list_builtin_baselines() -> List[Dict[str, object]]:
+    """列出随包分发的内置现场基线（按名称排序）。"""
+    items: List[Dict[str, object]] = []
+    if not BUILTIN_BASELINES_DIR.is_dir():
+        return items
+    for bdir in sorted(BUILTIN_BASELINES_DIR.iterdir()):
+        meta_path = bdir / "meta.json"
+        if not bdir.is_dir() or not meta_path.is_file():
+            continue
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        items.append(meta)
+    return items
+
+
+def get_builtin_baseline_meta(name: str) -> Dict[str, object]:
+    for meta in list_builtin_baselines():
+        if meta.get("name") == name:
+            return meta
+    known = ", ".join(item.get("name", "?") for item in list_builtin_baselines())
+    raise KylinPkgError("未知内置 baseline：%s（可用：%s）" % (name, known or "（无）"))
+
+
+def _builtin_status_bytes(name: str) -> bytes:
+    get_builtin_baseline_meta(name)
+    path = BUILTIN_BASELINES_DIR / name / "status.gz"
+    if not path.is_file():
+        raise KylinPkgError("内置 baseline 数据缺失：%s" % path)
+    with gzip.open(path, "rb") as fh:
+        return fh.read()
 
 
 def load_meta(state: State, name: str) -> Dict[str, object]:

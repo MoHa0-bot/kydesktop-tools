@@ -33,5 +33,12 @@ kylinpkg-gui = "kylinpkg.gui:main"
 [tool.setuptools]
 packages = ["kylinpkg"]
 
+[tool.setuptools.package-data]
+kylinpkg = [
+  "resources/icons/*.png",
+  "resources/baselines/*/status.gz",
+  "resources/baselines/*/meta.json",
+]
+
 [tool.setuptools.dynamic]
 version = { attr = "kylinpkg.__version__" }

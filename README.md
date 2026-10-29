@@ -360,6 +360,38 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 > `dpkg --get-selections` 只有包名和状态，不能用于 apt 依赖求解。
 > 跨架构下载时 baseline 也必须同架构：amd64 的基线不能用于 arm64；此时用 `--full`，或导入 arm64 目标机的 status。
 
+### 内置现场基线（`sp1-*`，2026-10 新增）
+
+随包分发 5 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），
+来自上面「现场实测预设」同一批 5 台 XC 通用版现场主机的收集包：
+
+| 内置基线 | 已安装包 | 架构 | 对应源配置预设 |
+| --- | --- | --- | --- |
+| `sp1-2203-x86` | 1849 | amd64 | `xc-2203-field` |
+| `sp1-2303-x86` | 1951 | amd64 | `xc-2303-field` |
+| `sp1-2403-x86` | 2059 | amd64 | `xc-2403u2` |
+| `sp1-2503-x86` | 2093 | amd64 | `xc-2503-field` |
+| `sp1-2503-arm64` | 2133 | arm64 | `xc-2503-field` |
+
+注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置
+不同——源配置两台一致合并为一条预设）。
+
+```bash
+# 列表里带 * 的是内置基线（尚未导入本机）
+./bin/kylinpkg baseline list
+
+# 一键创建可编辑副本：省略名称时直接以内置名命名
+./bin/kylinpkg baseline import --builtin sp1-2503-arm64
+
+# 也可以用别的名字
+./bin/kylinpkg baseline import my-2503-arm64 --builtin sp1-2503-arm64
+```
+
+GUI：baseline 面板点 **“从内置导入”**，下拉选择内置基线后一键创建。
+导入后与手工导入的 baseline 无任何区别，可绑定 profile、参与解析；
+配合同名现场预设（如 `xc-2503-field` + `sp1-2503-arm64`）即可在离线环境
+还原一台现场主机的完整 apt 源 + 已装包状态。
+
 绑定与覆盖：
 
 ```bash

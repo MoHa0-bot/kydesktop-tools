@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "name": "sp1-2503-arm64",
+  "created_at": "2026-10-28T16:52:30+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261028-165229.tar.gz"
+  },
+  "note": "V10 SP1 2503 arm64 现场主机，源配置对应预设 xc-2503-field；与 x86 包列表不同，不可互相替代",
+  "status_sha256": "10c9a878b80be420ed334e18858cfdb39a40113c5075d9bb7b4a04da0b7cfc31",
+  "status_size": 2083343,
+  "package_count": 2133,
+  "installed_count": 2133,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261028-165229.tar.gz",
+  "builtin": true
+}

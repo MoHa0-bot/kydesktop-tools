@@ -304,6 +304,7 @@ class App:
         buttons.pack(fill="x", pady=(6, 0))
         self._add_action_button(buttons, "导入 status 文件", self._baseline_import_dialog)
         self._add_action_button(buttons, "从本机导入", self._quick_import_baseline_system)
+        self._add_action_button(buttons, "从内置导入", self._quick_import_builtin_baseline)
         self._add_action_button(buttons, "删除", self._delete_baseline)
 
     def _add_action_button(self, parent: tk.Widget, text: str, command: Callable) -> ttk.Button:
@@ -1704,6 +1705,81 @@ class App:
             "已从本机导入 baseline：%s（已安装 %s 个包）"
             % (meta["name"], meta.get("installed_count", 0))
         )
+
+    def _quick_import_builtin_baseline(self) -> None:
+        builtin = baseline_mod.list_builtin_baselines()
+        if not builtin:
+            messagebox.showinfo(
+                "提示", "当前安装没有附带内置现场基线。", parent=self.root
+            )
+            return
+        win = tk.Toplevel(self.root)
+        win.title("从内置现场基线导入")
+        win.transient(self.root)
+        win.columnconfigure(1, weight=1)
+
+        names = [str(item.get("name", "?")) for item in builtin]
+        notes = {
+            str(item.get("name", "?")): "%s（已安装 %s 个包，%s）"
+            % (
+                item.get("note") or "",
+                item.get("installed_count", 0),
+                ",".join(item.get("architectures") or []) or "未知架构",
+            )
+            for item in builtin
+        }
+        builtin_var = tk.StringVar(value=names[0])
+        name_var = tk.StringVar(value=names[0])
+        note_var = tk.StringVar()
+
+        row0 = ttk.Frame(win)
+        row0.grid(row=0, column=0, columnspan=3, sticky="w", padx=8, pady=4)
+        ttk.Label(row0, text="内置基线：").pack(side="left")
+        combo = ttk.Combobox(
+            row0, textvariable=builtin_var, state="readonly", width=32, values=names
+        )
+        combo.pack(side="left")
+
+        detail_var = tk.StringVar(value=notes.get(names[0], ""))
+        ttk.Label(win, textvariable=detail_var, foreground="#666").grid(
+            row=1, column=0, columnspan=3, sticky="w", padx=8
+        )
+
+        def on_select(_event=None) -> None:
+            detail_var.set(notes.get(builtin_var.get(), ""))
+            name_var.set(builtin_var.get())
+
+        combo.bind("<<ComboboxSelected>>", on_select)
+        self._dialog_row(win, 2, "名称：", name_var, "")
+        self._dialog_row(win, 3, "备注：", note_var, "")
+
+        buttons = ttk.Frame(win)
+        buttons.grid(row=4, column=0, columnspan=3, sticky="e", padx=8, pady=(8, 10))
+
+        def do_import() -> None:
+            builtin_name = builtin_var.get().strip()
+            name = name_var.get().strip() or builtin_name
+            try:
+                meta = baseline_mod.import_baseline(
+                    self.state,
+                    name,
+                    from_builtin=builtin_name,
+                    note=note_var.get().strip(),
+                )
+            except KylinPkgError as exc:
+                messagebox.showerror("导入失败", str(exc), parent=win)
+                return
+            win.destroy()
+            self.refresh_baselines(select=meta["name"])
+            self._append_log(
+                "已从内置基线导入：%s（已安装 %s 个包）"
+                % (meta["name"], meta.get("installed_count", 0))
+            )
+
+        ttk.Button(buttons, text="取消", command=win.destroy).pack(side="left", padx=(0, 8))
+        ttk.Button(buttons, text="导入", command=do_import).pack(side="left")
+        win.wait_visibility()
+        win.grab_set()
 
     # --------------------------------------------------------------- delete
     def _delete_profile(self) -> None:

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "name": "sp1-2203-x86",
+  "created_at": "2026-10-28T14:18:24+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 sp1-2203-x86_kylinpkg-bundle-kylin-pc-20261028-141824.tar.gz"
+  },
+  "note": "V10 SP1 2203 amd64 现场主机，源配置对应预设 xc-2203-field",
+  "status_sha256": "d272753afe3c972e36c27ca65a865e1a133a75cec34b5ff5616e53f0515cfca0",
+  "status_size": 1829146,
+  "package_count": 1849,
+  "installed_count": 1849,
+  "architectures": [
+    "amd64"
+  ],
+  "warnings": [],
+  "source_bundle": "sp1-2203-x86_kylinpkg-bundle-kylin-pc-20261028-141824.tar.gz",
+  "builtin": true
+}
