@@ -248,6 +248,60 @@ def _builtin_status_bytes(name: str) -> bytes:
         return fh.read()
 
 
+# 记录已自动同步过的内置基线（name -> status_sha256）；
+# 用户手动删除的内置基线不会被再次导入，内置数据更新（sha 变化）后会重新导入
+_BUILTIN_SYNC_MARKER = ".builtin-sync.json"
+
+
+def ensure_builtin_baselines(state: State) -> List[str]:
+    """把随包分发的内置基线同步进 state（幂等，启动时调用）。
+
+    返回本次新导入的 baseline 名称列表。规则：
+    - state 中尚不存在的内置基线 → 自动导入（与手工 --builtin 导入一致）；
+    - 用户删除过的（已记录在同步标记中）→ 不再导入；
+    - 内置数据更新（status_sha256 变化）→ 用 --force 语义覆盖刷新。
+    """
+    synced: Dict[str, str] = {}
+    marker_path = state.baselines_dir / _BUILTIN_SYNC_MARKER
+    if marker_path.is_file():
+        try:
+            synced = json.loads(marker_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            synced = {}
+    created: List[str] = []
+    changed = False
+    for meta in list_builtin_baselines():
+        name = str(meta.get("name", ""))
+        sha = str(meta.get("status_sha256", ""))
+        if not name or synced.get(name) == sha:
+            continue
+        exists = (state.baseline_dir(name) / "meta.json").is_file()
+        if exists and name not in synced:
+            # 用户手工导入过同名基线：不覆盖，只记录同步标记
+            synced[name] = sha
+            changed = True
+            continue
+        if exists:
+            # 内置数据更新（sha 变化）且之前是自动导入的：覆盖刷新
+            import_baseline(
+                state, name, from_builtin=name,
+                note=str(meta.get("note") or ""), force=True,
+            )
+        else:
+            import_baseline(
+                state, name, from_builtin=name,
+                note=str(meta.get("note") or ""),
+            )
+            created.append(name)
+        synced[name] = sha
+        changed = True
+    if changed or not marker_path.is_file():
+        atomic_write_text(
+            marker_path, json.dumps(synced, ensure_ascii=False, indent=2) + "\n"
+        )
+    return created
+
+
 def load_meta(state: State, name: str) -> Dict[str, object]:
     if name == RESERVED_EMPTY:
         return {

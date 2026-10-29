@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+- 变更：现场实测预设 ID 更名 `xc-2203-field` / `xc-2303-field` /
+  `xc-2503-field` → `xc-2203-实机` / `xc-2303-实机` / `xc-2503-实机`；
+  名称规则（`validate_name`）相应扩展为支持汉字。
+- 变更：内置基线改为**启动时自动导入**（幂等，CLI 与 GUI 均生效），
+  baseline 列表直接可见可用；移除 GUI「从内置导入」按钮。用户手动删除的
+  内置基线不再自动恢复；内置数据随包更新后自动覆盖刷新；启动前已手工导入
+  的同名基线不会被覆盖（同步标记：state `baselines/.builtin-sync.json`）。
+  `baseline import --builtin` 保留，用于改名导入或手工恢复。后续新增内置
+  基线只需向 `kylinpkg/resources/baselines/` 添加条目，无需改代码。
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
 ## [0.3.2] - 2026-10-29

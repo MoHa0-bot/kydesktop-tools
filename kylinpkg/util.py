@@ -297,14 +297,15 @@ def redact_uri(uri: str) -> str:
     return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
 
 
-_SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+# 名称支持汉字（如预设 ID xc-2203-实机）、字母、数字、点、下划线、短横线
+_SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9\u4e00-\u9fff][A-Za-z0-9._\-\u4e00-\u9fff]{0,63}$")
 
 
 def validate_name(name: str, what: str = "名称") -> str:
     if not _SAFE_NAME_RE.match(name or ""):
         raise KylinPkgError(
-            "%s不合法：%r（只允许字母、数字、点、下划线、短横线，且不能以符号开头）"
-            % (what, name)
+            "%s不合法：%r（只允许汉字、字母、数字、点、下划线、短横线，"
+            "且不能以符号开头）" % (what, name)
         )
     return name
 

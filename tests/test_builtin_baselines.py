@@ -95,6 +95,46 @@ class BuiltinBaselinesTest(unittest.TestCase):
             # state 里的 baseline 可被正常读取
             self.assertEqual(len(baseline_mod.list_baselines(state)), 1)
 
+    def test_import_with_chinese_name(self):
+        # 名称规则支持汉字（预设 ID 如 xc-2203-实机）
+        with tempfile.TemporaryDirectory(prefix="kylinpkg-cjk-test-") as tmp:
+            state = State(Path(tmp) / "state").ensure()
+            meta = baseline_mod.import_baseline(
+                state, "基线-2203-实机", from_builtin="sp1-2203-x86"
+            )
+            self.assertEqual(meta["name"], "基线-2203-实机")
+            self.assertTrue(
+                (state.baseline_dir("基线-2203-实机") / "meta.json").is_file()
+            )
+
+    def test_ensure_builtin_auto_import(self):
+        with tempfile.TemporaryDirectory(prefix="kylinpkg-ensure-test-") as tmp:
+            state = State(Path(tmp) / "state").ensure()
+            created = baseline_mod.ensure_builtin_baselines(state)
+            self.assertEqual(sorted(created), sorted(EXPECTED_NAMES))
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 5)
+            # 幂等：再次调用不重复导入
+            self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 5)
+            # 用户删除后不再自动恢复（同步标记已记录）
+            baseline_mod.remove_baseline(state, "sp1-2203-x86")
+            self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
+            self.assertFalse(
+                (state.baseline_dir("sp1-2203-x86") / "meta.json").is_file()
+            )
+
+    def test_ensure_respects_manual_import(self):
+        # 用户手工导入过同名基线：自动同步不覆盖，只记录标记
+        with tempfile.TemporaryDirectory(prefix="kylinpkg-ensure2-test-") as tmp:
+            state = State(Path(tmp) / "state").ensure()
+            manual = baseline_mod.import_baseline(
+                state, "sp1-2303-x86", from_system=True, note="手工"
+            )
+            created = baseline_mod.ensure_builtin_baselines(state)
+            self.assertNotIn("sp1-2303-x86", created)
+            current = baseline_mod.load_meta(state, "sp1-2303-x86")
+            self.assertEqual(current["created_at"], manual["created_at"])
+
 
 if __name__ == "__main__":
     unittest.main()

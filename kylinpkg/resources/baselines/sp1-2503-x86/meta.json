@@ -6,7 +6,7 @@
     "kind": "builtin",
     "detail": "收集包 sp1-2503-x86_kylinpkg-bundle-kylin-pc-20261026-164940.tar.gz"
   },
-  "note": "V10 SP1 2503 amd64 现场主机，源配置对应预设 xc-2503-field",
+  "note": "V10 SP1 2503 amd64 现场主机，源配置对应预设 xc-2503-实机",
   "status_sha256": "ba6b8a12a1ccb3ebc22d43ebcd119caedd897a5c0fff6b47a83f8a40c97b49fa",
   "status_size": 2056772,
   "package_count": 2093,

@@ -210,7 +210,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 | 分组 | 数量 | ID |
 | --- | --- | --- |
-| XC 产线（通用版） | 9 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503`、`xc-2203-field`、`xc-2303-field`、`xc-2503-field`（后 3 条为现场实测） |
+| XC 产线（通用版） | 9 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503`、`xc-2203-实机`、`xc-2303-实机`、`xc-2503-实机`（后 3 条为现场实测） |
 | HWE 硬件启用栈 | 10 | `hwe-2107`、`hwe-2203`、`hwe-2303`、`hwe-2303u2`、`hwe-2403u2`、`hwe-2503`、`hwe-pp-2303`、`hwe-pp-2303u2`、`hwe-pp-2403u2`、`hwe-pp-2503` |
 | Wayland · 麒麟 990 | 6 | `wl-2107-990`、`wl-2203-990`、`wl-2303-990`、`wl-2303u2-990`、`wl-2403u2-990`、`wl-2503-990` |
 | Wayland · 麒麟 9006C | 6 | `wl-2107-9006c`、`wl-2203-9006c`、`wl-2303-9006c`、`wl-2303u2-9006c`、`wl-2403u2-9006c`、`wl-2503-9006c` |
@@ -235,16 +235,16 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 `preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。
 创建后可在“查看/编辑源配置”里直接修改。
 
-### 现场实测预设（`*-field`，2026-10 新增）
+### 现场实测预设（`*-实机`，2026-10 新增）
 
 来自用 `collector/kylinpkg-collect.sh` 在 5 台现场主机（均为 XC 通用版）收集的
 配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台。
 已按重复配置去重：
 
-- **`xc-2503-field`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条
+- **`xc-2503-实机`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条
   （amd64 + arm64，含实测 `kylin.pref`：550 一档）；
 - **sp1-2403** 与官方清单 `xc-2403u2` 逐行一致，不再单列；
-- **`xc-2203-field` / `xc-2303-field`**：现场"源管理器"标准配置，
+- **`xc-2203-实机` / `xc-2303-实机`**：现场"源管理器"标准配置，
   archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单
   `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
 - sp1-2203 现场重复的 pref、sp1-2303 的单机本地源（`/opt/apps-third/`）
@@ -258,7 +258,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   旧的 `sp1-*` ID 不再存在；
 - 2503 的 bugfix suite 以 xls 为准统一为 `10.1-2503-bugfix-limit`
   （旧文档写的 `10.1-2503-bugfix` 已被取代）；现场实测机器实际在用
-  非 `-limit` 版本，故 `xc-2503-field` 如实保留 `10.1-2503-bugfix`；
+  非 `-limit` 版本，故 `xc-2503-实机` 如实保留 `10.1-2503-bugfix`；
 - 新增 `*-bugfix-limit`、`*-update3`（2303 update2 的更新层）、
   `10.1-2403-wayland-*` 系列 suite；
 - 新增 HWE-PP、盘古 M900、麒麟 9000C、华为 Pangux/Flemingx/Panguy/Panguw 等产线；
@@ -367,30 +367,38 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 
 | 内置基线 | 已安装包 | 架构 | 对应源配置预设 |
 | --- | --- | --- | --- |
-| `sp1-2203-x86` | 1849 | amd64 | `xc-2203-field` |
-| `sp1-2303-x86` | 1951 | amd64 | `xc-2303-field` |
+| `sp1-2203-x86` | 1849 | amd64 | `xc-2203-实机` |
+| `sp1-2303-x86` | 1951 | amd64 | `xc-2303-实机` |
 | `sp1-2403-x86` | 2059 | amd64 | `xc-2403u2` |
-| `sp1-2503-x86` | 2093 | amd64 | `xc-2503-field` |
-| `sp1-2503-arm64` | 2133 | arm64 | `xc-2503-field` |
+| `sp1-2503-x86` | 2093 | amd64 | `xc-2503-实机` |
+| `sp1-2503-arm64` | 2133 | arm64 | `xc-2503-实机` |
 
 注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置
 不同——源配置两台一致合并为一条预设）。
 
 ```bash
-# 列表里带 * 的是内置基线（尚未导入本机）
+# 启动时已自动导入，直接可见可用（来源标记为“内置”）
 ./bin/kylinpkg baseline list
 
-# 一键创建可编辑副本：省略名称时直接以内置名命名
-./bin/kylinpkg baseline import --builtin sp1-2503-arm64
-
-# 也可以用别的名字
+# 如需换个名字再导一份，或删除后手工恢复
 ./bin/kylinpkg baseline import my-2503-arm64 --builtin sp1-2503-arm64
 ```
 
-GUI：baseline 面板点 **“从内置导入”**，下拉选择内置基线后一键创建。
-导入后与手工导入的 baseline 无任何区别，可绑定 profile、参与解析；
-配合同名现场预设（如 `xc-2503-field` + `sp1-2503-arm64`）即可在离线环境
+内置基线在 CLI / GUI **启动时自动导入**（幂等）：state 里缺哪条补哪条，
+列表中与手工导入的 baseline 无任何区别，可直接绑定 profile、参与解析。
+删除规则：你手动删除的内置基线不会被再次导入（同步标记记录在 state 的
+`baselines/.builtin-sync.json`）；内置数据随包更新后会自动覆盖刷新；
+启动前已手工导入的同名基线不会被覆盖。
+
+GUI：无需额外操作，baseline 列表里直接就有这 5 条。
+配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境
 还原一台现场主机的完整 apt 源 + 已装包状态。
+
+**新增内置基线的约定**：把收集包里 `rootfs/var/lib/dpkg/status` 以 gzip
+存为 `kylinpkg/resources/baselines/<名称>/status.gz`，并写一份同格式
+`meta.json`（含 `name`、`status_sha256`、`installed_count`、`architectures`、
+`source_bundle` 等字段，可参考现有条目），`tests/test_builtin_baselines.py`
+会校验清单与校验和。后续新增预设按同样方式扩充目录即可，无需改代码。
 
 绑定与覆盖：
 

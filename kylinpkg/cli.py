@@ -399,17 +399,19 @@ def cmd_baseline_list(args, state: State) -> int:
     ]
     if not items and not builtin_items:
         print("还没有 baseline。用 kylinpkg baseline import 导入 dpkg status，")
-        print("或用 kylinpkg baseline import <名称> --builtin <内置名> 创建内置现场基线。")
+        print("或用 kylinpkg baseline import <名称> --builtin <内置名> 从内置基线创建。")
         return 0
+    kind_label = {"builtin": "内置", "empty": "空", "system": "本机"}
     rows = []
     for meta in items:
+        kind = (meta.get("origin") or {}).get("kind", "-")
         rows.append(
             [
                 meta.get("name", "?"),
                 meta.get("installed_count", 0),
                 meta.get("package_count", 0),
                 ",".join(meta.get("architectures") or []) or "-",
-                (meta.get("origin") or {}).get("kind", "-"),
+                kind_label.get(kind, kind),
                 meta.get("created_at", "-"),
             ]
         )
@@ -994,7 +996,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_bimp.add_argument("name", nargs="?", default="", help="baseline 名称（--builtin 时可省略）")
     p_bimp.add_argument(
         "--builtin", metavar="NAME", dest="from_builtin",
-        help="从随包分发的内置现场基线创建（kylinpkg baseline list 中带 * 的条目）",
+        help="从随包分发的内置基线创建（启动时已默认自动导入，此选项用于改名导入或覆盖刷新）",
     )
     p_bimp.add_argument("--status-file", type=Path, help="dpkg status 文件")
     p_bimp.add_argument("--from-system", action="store_true", help="使用本机 /var/lib/dpkg/status")
@@ -1131,6 +1133,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     state = State(args.state).ensure()
+    try:
+        baseline_mod.ensure_builtin_baselines(state)  # 内置基线默认导入（幂等）
+    except Exception:
+        pass  # 自动导入失败不阻塞命令，可用 baseline import --builtin 手工补
     try:
         return int(args.func(args, state))
     except KylinPkgError as exc:

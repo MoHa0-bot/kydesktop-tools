@@ -75,9 +75,9 @@ class PresetsTest(unittest.TestCase):
         self.assertIn("10.1-kylin-2503", text)
         self.assertIn("10.1-2503-bugfix-limit", text)
         # 全目录不应再出现过时的 10.1-2503-bugfix（非 -limit）写法
-        # （xc-2503-field 除外：2026-10 现场实测机器确实在用非 -limit suite，如实收录）
+        # （xc-2503-实机 除外：2026-10 现场实测机器确实在用非 -limit suite，如实收录）
         for item in presets.PRESETS:
-            if item.id == "xc-2503-field":
+            if item.id == "xc-2503-实机":
                 continue
             for line in item.sources:
                 parts = line.split()
@@ -107,7 +107,7 @@ class PresetsTest(unittest.TestCase):
         self.assertEqual(len(with_pin), 12)
         for preset_id in (
             "xc-2503",
-            "xc-2503-field",
+            "xc-2503-实机",
             "hwe-2503",
             "hwe-pp-2503",
             "wl-2503-990",
