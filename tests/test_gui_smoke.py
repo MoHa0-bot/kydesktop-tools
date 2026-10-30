@@ -73,6 +73,35 @@ class GuiSmokeTest(unittest.TestCase):
                 self.assertEqual(list(app.baseline_tree.get_children()), ["b1"])
                 self.assertIn(FULL_LABEL, app.baseline_combo["values"])
                 self.assertIn("b1", app.baseline_combo["values"])
+
+                # baseline 面板不再显示"已安装包"列
+                headings = [
+                    app.baseline_tree.heading(col)["text"]
+                    for col in app.baseline_tree["columns"]
+                ]
+                self.assertNotIn("已安装包", headings)
+
+                # 两个面板的搜索栏：过滤列表显示，下拉框仍保留全部可选值
+                app.baseline_search_var.set("b1")
+                app.refresh_baselines()
+                self.assertEqual(list(app.baseline_tree.get_children()), ["b1"])
+                app.baseline_search_var.set("无匹配关键字")
+                app.refresh_baselines()
+                self.assertEqual(list(app.baseline_tree.get_children()), [])
+                self.assertIn("b1", app.baseline_combo["values"])
+                app.baseline_search_var.set("")
+                app.refresh_baselines()
+                self.assertEqual(list(app.baseline_tree.get_children()), ["b1"])
+                app.profile_search_var.set("p1")
+                app.refresh_profiles()
+                self.assertEqual(list(app.profile_tree.get_children()), ["p1"])
+                app.profile_search_var.set("无匹配关键字")
+                app.refresh_profiles()
+                self.assertEqual(list(app.profile_tree.get_children()), [])
+                self.assertIn("p1", app.profile_combo["values"])
+                app.profile_search_var.set("")
+                app.refresh_profiles()
+                self.assertEqual(list(app.profile_tree.get_children()), ["p1"])
                 app.profile_tree.selection_set("p1")
                 app.profile_var.set("p1")
                 root.update()

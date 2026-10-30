@@ -262,9 +262,28 @@ class App:
         vsb.pack(side="right", fill="y")
         return tree
 
+    @staticmethod
+    def _match_search(filter_text: str, *fields: object) -> bool:
+        """搜索过滤：空关键字匹配全部，否则对给定字段做不区分大小写的子串匹配。"""
+        if not filter_text:
+            return True
+        haystack = " ".join(str(field) for field in fields).lower()
+        return filter_text.lower() in haystack
+
+    def _make_search_row(self, parent: tk.Widget, textvariable: tk.StringVar, command: Callable) -> None:
+        row = ttk.Frame(parent)
+        row.pack(fill="x", pady=(0, 4))
+        ttk.Label(row, text="搜索：").pack(side="left")
+        entry = ttk.Entry(row, textvariable=textvariable)
+        entry.pack(side="left", fill="x", expand=True)
+        # 用变量 trace 而不是 KeyRelease：粘贴、清空等不产生按键的输入也能实时过滤。
+        textvariable.trace_add("write", lambda *_args: command())
+
     def _build_profile_panel(self, parent: tk.Widget) -> None:
         frame = ttk.LabelFrame(parent, text="apt 源配置（profile）", padding=8)
         frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        self.profile_search_var = tk.StringVar()
+        self._make_search_row(frame, self.profile_search_var, self.refresh_profiles)
         self.profile_tree = self._make_tree(
             frame,
             ("name", "arch", "baseline", "sources"),
@@ -293,11 +312,13 @@ class App:
     def _build_baseline_panel(self, parent: tk.Widget) -> None:
         frame = ttk.LabelFrame(parent, text="dpkg 初始状态（baseline）", padding=8)
         frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
+        self.baseline_search_var = tk.StringVar()
+        self._make_search_row(frame, self.baseline_search_var, self.refresh_baselines)
         self.baseline_tree = self._make_tree(
             frame,
-            ("name", "installed", "arch", "kernel", "origin"),
-            ("名称", "已安装包", "架构", "内核(linux-generic)", "来源"),
-            (170, 70, 100, 130, 80),
+            ("name", "arch", "kernel", "origin"),
+            ("名称", "架构", "内核(linux-generic)", "来源"),
+            (170, 100, 150, 80),
         )
         self.baseline_tree.bind("<<TreeviewSelect>>", self._on_baseline_select)
         buttons = ttk.Frame(frame)
@@ -458,6 +479,7 @@ class App:
         if not current:
             selection = self.profile_tree.selection()
             current = selection[0] if selection else ""
+        filter_text = self.profile_search_var.get().strip()
         self.profile_tree.delete(*self.profile_tree.get_children())
         names: List[str] = []
         for meta in profile_mod.list_profiles(self.state):
@@ -465,13 +487,18 @@ class App:
             if not name:
                 continue
             names.append(name)
+            arch_text = ",".join(meta.get("architectures") or [])
+            if not self._match_search(
+                filter_text, name, arch_text, meta.get("baseline") or "全量"
+            ):
+                continue
             self.profile_tree.insert(
                 "",
                 "end",
                 iid=name,
                 values=(
                     name,
-                    ",".join(meta.get("architectures") or []),
+                    arch_text,
                     meta.get("baseline") or "全量",
                     len(meta.get("sources_summary") or []),
                 ),
@@ -480,19 +507,25 @@ class App:
         if names:
             chosen = current if current in names else names[0]
             self.profile_var.set(chosen)
-            self.profile_tree.selection_set(chosen)
-            self.profile_tree.see(chosen)
+            if chosen in self.profile_tree.get_children():
+                self.profile_tree.selection_set(chosen)
+                self.profile_tree.see(chosen)
+            elif self.profile_tree.selection():
+                self.profile_tree.selection_remove(*self.profile_tree.selection())
         else:
             self.profile_var.set("")
         self._refreshing = False
-        if names:
+        if self.profile_tree.get_children():
             self._on_profile_select()
+        elif names:
+            self.status_var.set("没有匹配的 profile")
         else:
             self.status_var.set("还没有 apt 源配置，请先导入")
 
     def refresh_baselines(self, select: Optional[str] = None) -> None:
         self._refreshing = True
         current = select or self.baseline_var.get().strip()
+        filter_text = self.baseline_search_var.get().strip()
         self.baseline_tree.delete(*self.baseline_tree.get_children())
         names: List[str] = []
         for meta in baseline_mod.list_baselines(self.state):
@@ -501,6 +534,11 @@ class App:
                 continue
             names.append(name)
             origin = meta.get("origin") or {}
+            arch_text = ",".join(meta.get("architectures") or [])
+            if not self._match_search(
+                filter_text, name, arch_text, meta.get("kernel_version", "-"), origin.get("kind", "-")
+            ):
+                continue
             meta = baseline_mod.ensure_kernel_info(self.state, meta)
             self.baseline_tree.insert(
                 "",
@@ -508,8 +546,7 @@ class App:
                 iid=name,
                 values=(
                     name,
-                    meta.get("installed_count", 0),
-                    ",".join(meta.get("architectures") or []),
+                    arch_text,
                     meta.get("kernel_version", "-"),
                     origin.get("kind", "-"),
                 ),
@@ -517,8 +554,9 @@ class App:
         values = [FULL_LABEL] + names
         self.baseline_combo["values"] = values
         if select and select in names:
-            self.baseline_tree.selection_set(select)
-            self.baseline_tree.see(select)
+            if select in self.baseline_tree.get_children():
+                self.baseline_tree.selection_set(select)
+                self.baseline_tree.see(select)
             self.baseline_var.set(select)
         elif current not in values:
             self.baseline_var.set(FULL_LABEL)
