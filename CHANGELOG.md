@@ -5,9 +5,13 @@
 
 ## [Unreleased]
 
+- 计划中：下载并发/断点续传、图形化 SSH 导入。
+
+## [0.3.5] - 2026-10-30
+
 - 新增：GUI 的 **apt 源配置（profile）** 与 **dpkg 初始状态（baseline）** 两个面板顶部各加一个**搜索栏**，按展示列（名称、架构，baseline 面板另含内核版本与来源）不区分大小写实时过滤列表；无匹配时列表清空并提示，下方下拉选择框仍保留全部可选值，不受搜索影响。
 - 变更：dpkg 初始状态面板列表不再显示**"已安装包"**一列（窄窗口下挤压名称/内核列），列宽相应调整；包数仍可在导入完成提示与内置基线文档表格中查看。
-- 计划中：下载并发/断点续传、图形化 SSH 导入。
+- 修复：补上 packaging/README.md 中遗留的旧 deb 文件名（0.3.1）。
 
 ## [0.3.4] - 2026-10-30
 
@@ -245,7 +249,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.5
 [0.3.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.4
 [0.3.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.3
 [0.3.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.2
