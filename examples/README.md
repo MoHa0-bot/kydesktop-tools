@@ -1,9 +1,6 @@
 # 示例
 
-- `xc-2503.sources.list`：V10 SP1 XC-2503（产线通用版）的外网正式源组合——
-  基础 `10.1-kylin` + 叠加更新 `10.1-kylin-2503` + 限定修复 `10.1-2503-bugfix-limit`
-  + partner。同一套 URI 对 amd64/arm64/loongarch64/mips64el 都有效，只需导入时
-  指定 `--arch`。
+- `xc-2503.sources.list`：V10 SP1 XC-2503（产线通用版）的外网正式源组合——基础 `10.1-kylin` + 叠加更新 `10.1-kylin-2503` + 限定修复 `10.1-2503-bugfix-limit` + partner。同一套 URI 对 amd64/arm64/loongarch64/mips64el 都有效，只需导入时指定 `--arch`。
 
 ```bash
 # 导入示例源（会复制本机 keyring）
@@ -24,12 +21,10 @@
 ../bin/kylinpkg download -p xc-2503-x86 -o ./out/x86 zlib1g
 ```
 
-等价的预设用法（`xc-2503` 预设还自带 `kylin.pref` 优先级配置，
-会一并写入 profile 的 `preferences.d/kylin.pref`）：
+等价的预设用法（`xc-2503` 预设还自带 `kylin.pref` 优先级配置，会一并写入 profile 的 `preferences.d/kylin.pref`）：
 
 ```bash
 ../bin/kylinpkg preset create xc-2503 --profile xc-2503 --arch arm64
 ```
 
-注意：`--sources-file` 导入时默认复制本机 `/etc/apt/trusted.gpg*`；
-如果使用自定义 key，加 `--keyring` 或源行加 `[trusted=yes]`。
+注意：`--sources-file` 导入时默认复制本机 `/etc/apt/trusted.gpg*`；如果使用自定义 key，加 `--keyring` 或源行加 `[trusted=yes]`。

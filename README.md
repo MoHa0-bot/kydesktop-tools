@@ -4,10 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.4**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
-开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
-PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
-（由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
+当前版本：**0.3.4**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
 
 ## apt 到底依赖哪些信息
 
@@ -35,7 +32,7 @@ apt 求解"要装哪些包、下哪些包"时，输入是四类信息：
   - `10.1-kylin-2503`（叠加更新）
   - `10.1-2503-bugfix-limit`（限定修复）
   - partner：`archive2.kylinos.cn/.../partner/V10-SP1`
-  只挂叠加 suite 会缺基础包（实测 `libgcc-s1` 就会解析失败）。
+  - 注意：只挂叠加 suite 会缺基础包（实测 `libgcc-s1` 就会解析失败）。
 
 ## 环境要求
 
@@ -81,8 +78,7 @@ sudo dpkg -i ./kylinpkg_0.3.4_all.deb
 | 图标 | `/usr/share/icons/hicolor/scalable/apps/kylinpkg.svg` |
 | 收集脚本 | `/opt/kylinpkg/collector/kylinpkg-collect.sh` |
 
-默认下载输出目录是 `/tmp/kylinpkg-out/<profile>-<架构>`，可用 `-o` 或环境变量
-`KYLINPKG_OUTPUT_DIR` 覆盖。运行状态仍保存在 `~/.local/share/kylinpkg`。
+默认下载输出目录是 `/tmp/kylinpkg-out/<profile>-<架构>`，可用 `-o` 或环境变量 `KYLINPKG_OUTPUT_DIR` 覆盖。运行状态仍保存在 `~/.local/share/kylinpkg`。
 
 卸载：`sudo apt remove kylinpkg`。
 
@@ -94,50 +90,29 @@ sudo dpkg -i ./kylinpkg_0.3.4_all.deb
 ./bin/kylinpkg gui
 ```
 
-GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），
-在 GUI 里导入的 profile/baseline 可以直接被命令行使用，反之亦然。
+GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），在 GUI 里导入的 profile/baseline 可以直接被命令行使用，反之亦然。
 
 界面分三块（顶部另有 **“导入其他主机配置”**、**“任务记录”** 和 **“清理缓存”** 按钮）：
 
-菜单栏的 **帮助 → 使用手册** 会用系统默认程序打开 PDF 版使用手册
-（`docs/kylinpkg-manual.pdf`，随 deb 一起安装到 `/opt/kylinpkg/docs/`）。
+菜单栏的 **帮助 → 使用手册** 会用系统默认程序打开 PDF 版使用手册（`docs/kylinpkg-manual.pdf`，随 deb 一起安装到 `/opt/kylinpkg/docs/`）。
 
-顶部的 **“任务记录”** 打开下载历史对话框：每次下载（含失败/中断）都会留痕，
-可查看任务的时间、状态、profile、架构、软件包与输出目录，支持
-**重新下载**（按原配置重跑）、**应用到当前参数**（自动填入下载表单，
-双击记录同效）和删除单条记录。
+顶部的 **“任务记录”** 打开下载历史对话框：每次下载（含失败/中断）都会留痕，可查看任务的时间、状态、profile、架构、软件包与输出目录，支持 **重新下载**（按原配置重跑）、**应用到当前参数**（自动填入下载表单，双击记录同效）和删除单条记录。
 
-1. **apt 源配置（profile）**：按钮行保持 `从预设创建`、`从本机导入`、
-   `编辑源配置`、`更多`、`删除` 一行显示；`导入源配置`（自定义
-   `sources.list`/`sources.list.d`/preferences/keyring/auth.conf）和
-   `从 rootfs 导入` 收在 **“更多”** 菜单里。支持同名资源的管理和删除。
-2. **dpkg 初始状态（baseline）**：`导入 status 文件` 支持选择目标机的
-   `/var/lib/dpkg/status`，或从本机/rootfs/空基线导入，并命名保存。
-3. **下载参数**：选择 profile + baseline（或“全量闭包”），填写软件包名
-   （空格或逗号分隔），可用 **“选择版本”** 查看 `apt policy` 里的所有版本；
-   默认勾选 **“下载依赖”**，取消后只下载当前包本身；选择输出目录，然后：
+1. **apt 源配置（profile）**：按钮行保持 `从预设创建`、`从本机导入`、`编辑源配置`、`更多`、`删除` 一行显示；`导入源配置`（自定义 `sources.list`/`sources.list.d`/preferences/keyring/auth.conf）和 `从 rootfs 导入` 收在 **“更多”** 菜单里。支持同名资源的管理和删除。
+2. **dpkg 初始状态（baseline）**：`导入 status 文件` 支持选择目标机的 `/var/lib/dpkg/status`，或从本机/rootfs/空基线导入，并命名保存。
+3. **下载参数**：选择 profile + baseline（或“全量闭包”），填写软件包名（空格或逗号分隔），可用 **“选择版本”** 查看 `apt policy` 里的所有版本；默认勾选 **“下载依赖”**，取消后只下载当前包本身；选择输出目录，然后：
    - `解析计划`：只做依赖求解，在下方日志里显示包清单、版本、大小；
-   - `下载`：复用同一套隔离 apt root，执行 `apt-get install --download-only`，
-     校验哈希、生成 `manifest.json`，可选择同时生成离线 apt 源。
+   - `下载`：复用同一套隔离 apt root，执行 `apt-get install --download-only`，校验哈希、生成 `manifest.json`，可选择同时生成离线 apt 源。
 
-**架构是下拉选择**：`amd64`、`arm64`、`mips64el`、`loongarch64`、`i386`，
-以及 `amd64,i386` 组合。已有的 profile 若带其他架构，
-选中时会动态显示，但默认选项只保留上述几个。
+**架构是下拉选择**：`amd64`、`arm64`、`mips64el`、`loongarch64`、`i386`，以及 `amd64,i386` 组合。已有的 profile 若带其他架构，选中时会动态显示，但默认选项只保留上述几个。
 
-解析/下载在后台线程执行，界面不会卡住；日志区会显示 apt 的解析结果、下载结果和警告。
-任务运行时旁边会出现 **“中断”** 按钮：点击会终止正在运行的 apt 及其子进程，
-不会修改本机；已下载的部分文件会保留，下次可继续/重试。
-命令行下按 `Ctrl+C` 也会中断当前 apt 子进程。
-图形界面需要 `python3-tk`（麒麟一般已自带）；没有图形环境时请使用 CLI。
+解析/下载在后台线程执行，界面不会卡住；日志区会显示 apt 的解析结果、下载结果和警告。任务运行时旁边会出现 **“中断”** 按钮：点击会终止正在运行的 apt 及其子进程，不会修改本机；已下载的部分文件会保留，下次可继续/重试。命令行下按 `Ctrl+C` 也会中断当前 apt 子进程。图形界面需要 `python3-tk`（麒麟一般已自带）；没有图形环境时请使用 CLI。
 
-安装 deb 后会自动出现在开始菜单；源码运行时直接用 `./bin/kylinpkg-gui`。
-桌面文件源码在 `packaging/kylinpkg.desktop`，安装后位于
-`/usr/share/applications/kylinpkg.desktop`。
+安装 deb 后会自动出现在开始菜单；源码运行时直接用 `./bin/kylinpkg-gui`。桌面文件源码在 `packaging/kylinpkg.desktop`，安装后位于 `/usr/share/applications/kylinpkg.desktop`。
 
 ## 从原始主机收集（bundle）
 
-如果无法直接访问目标版本的原始主机，可以先在原始主机上收集一个包，
-再拿回下载器一键导入。收集脚本在 `collector/kylinpkg-collect.sh`。
+如果无法直接访问目标版本的原始主机，可以先在原始主机上收集一个包，再拿回下载器一键导入。收集脚本在 `collector/kylinpkg-collect.sh`。
 
 ```bash
 # 1) 拷到原始主机并运行（建议 sudo，能读到 auth.conf 等 600 文件）
@@ -159,10 +134,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 ./bin/kylinpkg resolve -p sp1-2303 zlib1g
 ```
 
-也可以直接在 GUI 顶部点 **“导入其他主机配置”**，选择 tar.gz 并填写名称；
-对话框分「选择收集包」「导入设置」两步，文件选择窗口默认打开当前用户的
-桌面目录；对话框里还提供 **“下载收集脚本”** 和 **“使用手册”** 按钮，可把
-`collector/kylinpkg-collect.sh` 和说明文档另存到任意位置。
+也可以直接在 GUI 顶部点 **“导入其他主机配置”**，选择 tar.gz 并填写名称；对话框分「选择收集包」「导入设置」两步，文件选择窗口默认打开当前用户的桌面目录；对话框里还提供 **“下载收集脚本”** 和 **“使用手册”** 按钮，可把 `collector/kylinpkg-collect.sh` 和说明文档另存到任意位置。
 
 收集包包含：
 
@@ -174,20 +146,14 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 注意：
 
-- 默认**不收集** `/etc/apt/auth.conf`（私有源凭据）。需要时收集端加 `--with-auth`，
-  导入时 `bundle import` 会自动带上，`profile import --with-auth` 也支持。
-- 收集包可能包含私有源地址/凭据，脚本会把文件权限设为 600，请妥善保管；
-  用 `sudo` 运行时脚本会把 tar.gz 的属主改回 `SUDO_USER`，方便直接 scp。
-- 跨架构使用：`bundle import ... --profile xxx-arm64 --arch arm64 --no-bind`
-  （原基线是 amd64 时不能绑定到 arm64 profile）。
+- 默认**不收集** `/etc/apt/auth.conf`（私有源凭据）。需要时收集端加 `--with-auth`，导入时 `bundle import` 会自动带上，`profile import --with-auth` 也支持。
+- 收集包可能包含私有源地址/凭据，脚本会把文件权限设为 600，请妥善保管；用 `sudo` 运行时脚本会把 tar.gz 的属主改回 `SUDO_USER`，方便直接 scp。
+- 跨架构使用：`bundle import ... --profile xxx-arm64 --arch arm64 --no-bind` （原基线是 amd64 时不能绑定到 arm64 profile）。
 - 更多细节见 `collector/README.md`。
 
 ## 内置源预设（45 个）
 
-数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，
-纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。
-共 45 个预设 / 218 条 `deb` 源行，其中 12 条附带 `kylin.pref` 优先级配置；
-另有 3 条为 2026-10 现场实测预设（见下文「现场实测预设」）。
+数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。共 45 个预设 / 218 条 `deb` 源行，其中 12 条附带 `kylin.pref` 优先级配置；另有 3 条为 2026-10 现场实测预设（见下文「现场实测预设」）。
 
 ```bash
 # 查看全部预设
@@ -203,8 +169,7 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
   --arch amd64 --baseline xc-2503-default
 ```
 
-图形界面：源配置面板点 **“从预设创建”**，左侧选预设、右侧看源预览，
-填写名称/架构/基线后创建；列表里“优先级”一列标出哪些预设带 `kylin.pref`。
+图形界面：源配置面板点 **“从预设创建”**，左侧选预设、右侧看源预览，填写名称/架构/基线后创建；列表里“优先级”一列标出哪些预设带 `kylin.pref`。
 
 预设分组（按 xls 的产线版本划分）：
 
@@ -228,54 +193,34 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 ### 2503 系列的优先级配置
 
-2503 各产线（`xc-2503`、`hwe-2503`、`hwe-pp-2503`、以及 Wayland 2503 各芯片分支）
-和华为 Pangux/Flemingx/Panguy 平台在 xls 里附带了
-`/etc/apt/preferences.d/kylin.pref` 的 `Pin-Priority` 设置。
-这些预设带有 `preferences` 字段，创建 profile 时会自动写进
-`preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。
-创建后可在“查看/编辑源配置”里直接修改。
+2503 各产线（`xc-2503`、`hwe-2503`、`hwe-pp-2503`、以及 Wayland 2503 各芯片分支）和华为 Pangux/Flemingx/Panguy 平台在 xls 里附带了 `/etc/apt/preferences.d/kylin.pref` 的 `Pin-Priority` 设置。这些预设带有 `preferences` 字段，创建 profile 时会自动写进 `preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。创建后可在“查看/编辑源配置”里直接修改。
 
 ### 现场实测预设（`*-实机`，2026-10 新增）
 
-来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机（均为 XC 通用版）收集的
-配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。
-已按重复配置去重：
+来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机（均为 XC 通用版）收集的配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。已按重复配置去重：
 
-- **`xc-2503-实机`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条
-  （amd64 + arm64，含实测 `kylin.pref`：550 一档）；
-- **`xc-2303-实机`**：sp1-2303 的 x86 / arm64 两台配置一致，合并为一条
-  （amd64 + arm64）；
+- **`xc-2503-实机`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条（amd64 + arm64，含实测 `kylin.pref`：550 一档）；
+- **`xc-2303-实机`**：sp1-2303 的 x86 / arm64 两台配置一致，合并为一条（amd64 + arm64）；
 - **sp1-2403**（x86 / arm64）与官方清单 `xc-2403u2` 逐行一致，不再单列；
-- **`xc-2203-实机` / `xc-2303-实机`**：现场"源管理器"标准配置，
-  archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单
-  `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
-- sp1-2203 现场重复的 pref、sp1-2303 的单机本地源（`/opt/apps-third/`）
-  未收录，差异细节见 `docs/kylin-desktop-sources.md` 第九节。
+- **`xc-2203-实机` / `xc-2303-实机`**：现场"源管理器"标准配置，archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单 `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
+- sp1-2203 现场重复的 pref、sp1-2303 的单机本地源（`/opt/apps-third/`）未收录，差异细节见 `docs/kylin-desktop-sources.md` 第九节。
 
 ### 与旧版源汇总的差异
 
 旧的《银河麒麟桌面版软件源地址汇总.md》已过时，本次按 xls 整体重建：
 
-- 预设 ID 全部改为 xls 的产线命名（`xc-*` / `hwe-*` / `wl-*`），
-  旧的 `sp1-*` ID 不再存在；
-- 2503 的 bugfix suite 以 xls 为准统一为 `10.1-2503-bugfix-limit`
-  （旧文档写的 `10.1-2503-bugfix` 已被取代）；现场实测机器实际在用
-  非 `-limit` 版本，故 `xc-2503-实机` 如实保留 `10.1-2503-bugfix`；
-- 新增 `*-bugfix-limit`、`*-update3`（2303 update2 的更新层）、
-  `10.1-2403-wayland-*` 系列 suite；
+- 预设 ID 全部改为 xls 的产线命名（`xc-*` / `hwe-*` / `wl-*`），旧的 `sp1-*` ID 不再存在；
+- 2503 的 bugfix suite 以 xls 为准统一为 `10.1-2503-bugfix-limit` （旧文档写的 `10.1-2503-bugfix` 已被取代）；现场实测机器实际在用非 `-limit` 版本，故 `xc-2503-实机` 如实保留 `10.1-2503-bugfix`；
+- 新增 `*-bugfix-limit`、`*-update3`（2303 update2 的更新层）、`10.1-2403-wayland-*` 系列 suite；
 - 新增 HWE-PP、盘古 M900、麒麟 9000C、华为 Pangux/Flemingx/Panguy/Panguw 等产线；
-- HWE 源不再使用 `archive2` 的 `KY-V10-SP1-$(ARCH)` 桌面源，改用 `KYLIN-ALL` 的
-  `*-hwe-updates` / `*-hwe-bugfix-limit`；
+- HWE 源不再使用 `archive2` 的 `KY-V10-SP1-$(ARCH)` 桌面源，改用 `KYLIN-ALL` 的 `*-hwe-updates` / `*-hwe-bugfix-limit`；
 - 只保留 2 条 V10 非 SP1（10.0 系）历史预设，新清单不再收录它们。
 
-每次修改 `docs/kylin-desktop-sources.md` 后运行测试，
-`tests/test_presets.py` 会逐行校验预设与文档一致。
+每次修改 `docs/kylin-desktop-sources.md` 后运行测试，`tests/test_presets.py` 会逐行校验预设与文档一致。
 
 ## 查看和编辑源配置
 
-图形界面：选中一个 profile，点 **“编辑源配置”**。左侧是文件列表，
-右侧是文本编辑器，可 **保存 / 还原 / 新建源文件 / 删除 / 验证**。
-保存时会：
+图形界面：选中一个 profile，点 **“编辑源配置”**。左侧是文件列表，右侧是文本编辑器，可 **保存 / 还原 / 新建源文件 / 删除 / 验证**。保存时会：
 
 - 校验 `.list` / `.sources` 语法；
 - 拒绝删除最后一个源（避免 profile 变成空壳）；
@@ -303,9 +248,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 ./bin/kylinpkg profile rm-file sp1-2503 sources.list.d/extra.list
 ```
 
-可编辑文件：`sources.list`、`sources.list.d/*.list|*.sources`、`preferences`、
-`preferences.d/*`、`auth.conf`、`auth.conf.d/*`。`keyrings/*` 和 `profile.json`
-不可编辑。`profile show --raw` 仍可用于一次性打印全部文本文件。
+可编辑文件：`sources.list`、`sources.list.d/*.list|*.sources`、`preferences`、`preferences.d/*`、`auth.conf`、`auth.conf.d/*`。`keyrings/*` 和 `profile.json` 不可编辑。`profile show --raw` 仍可用于一次性打印全部文本文件。
 
 ## 两个一等公民
 
@@ -335,8 +278,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 - `.list` 与 deb822 `.sources` 都支持。
 - `--from-system/ssh/rootfs` 会同时抓取 `preferences`、`preferences.d` 和 `trusted.gpg*`。
 - `--capture-baseline NAME` 可以在抓源的同时抓 `dpkg status`，一次完成 profile + baseline。
-- `Signed-By` 引用的 keyring 会被复制进 profile 并改写路径（`keyrings/signed-by/`），
-  便于跨机器复用；源里内嵌的凭据请用 `--with-auth`/`--auth-file` 显式导入。
+- `Signed-By` 引用的 keyring 会被复制进 profile 并改写路径（`keyrings/signed-by/`），便于跨机器复用；源里内嵌的凭据请用 `--with-auth`/`--auth-file` 显式导入。
 - 架构可以写 `x86_64`/`aarch64` 别名，工具会归一成 `amd64`/`arm64`。
 - 还提供按 Kylin suite 快捷生成的 `profile add`（适合源结构已知时）：
 
@@ -364,8 +306,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 
 ### 内置现场基线（`sp1-*`，2026-10 新增）
 
-随包分发 7 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），
-来自上面「现场实测预设」同一批 7 台 XC 通用版现场主机的收集包：
+随包分发 7 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），来自上面「现场实测预设」同一批 7 台 XC 通用版现场主机的收集包：
 
 | 内置基线 | 已安装包 | 架构 | 内核（linux-generic） | 对应源配置预设 |
 | --- | --- | --- | --- | --- |
@@ -377,9 +318,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 | `sp1-2503-x86` | 2093 | amd64 | 5.4.18.142.131 | `xc-2503-实机` |
 | `sp1-2503-arm64` | 2084 | arm64 | 5.4.18.142.131 | `xc-2503-实机` |
 
-注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置
-不同——源配置两台一致合并为一条预设）；2303 / 2403 的 arm64 快照同样与
-对应 x86 快照包列表不同。
+注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置不同——源配置两台一致合并为一条预设）；2303 / 2403 的 arm64 快照同样与对应 x86 快照包列表不同。
 
 ```bash
 # 启动时已自动导入，直接可见可用（来源标记为“内置”）
@@ -389,21 +328,11 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 ./bin/kylinpkg baseline import my-2503-arm64 --builtin sp1-2503-arm64
 ```
 
-内置基线在 CLI / GUI **启动时自动导入**（幂等）：state 里缺哪条补哪条，
-列表中与手工导入的 baseline 无任何区别，可直接绑定 profile、参与解析。
-删除规则：你手动删除的内置基线不会被再次导入（同步标记记录在 state 的
-`baselines/.builtin-sync.json`）；内置数据随包更新后会自动覆盖刷新；
-启动前已手工导入的同名基线不会被覆盖。
+内置基线在 CLI / GUI **启动时自动导入**（幂等）：state 里缺哪条补哪条，列表中与手工导入的 baseline 无任何区别，可直接绑定 profile、参与解析。删除规则：你手动删除的内置基线不会被再次导入（同步标记记录在 state 的 `baselines/.builtin-sync.json`）；内置数据随包更新后会自动覆盖刷新；启动前已手工导入的同名基线不会被覆盖。
 
-GUI：无需额外操作，baseline 列表里直接就有这 7 条。
-配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境
-还原一台现场主机的完整 apt 源 + 已装包状态。
+GUI：无需额外操作，baseline 列表里直接就有这 7 条。配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境还原一台现场主机的完整 apt 源 + 已装包状态。
 
-**新增内置基线的约定**：把收集包里 `rootfs/var/lib/dpkg/status` 以 gzip
-存为 `kylinpkg/resources/baselines/<名称>/status.gz`，并写一份同格式
-`meta.json`（含 `name`、`status_sha256`、`installed_count`、`architectures`、
-`source_bundle` 等字段，可参考现有条目），`tests/test_builtin_baselines.py`
-会校验清单与校验和。后续新增预设按同样方式扩充目录即可，无需改代码。
+**新增内置基线的约定**：把收集包里 `rootfs/var/lib/dpkg/status` 以 gzip 存为 `kylinpkg/resources/baselines/<名称>/status.gz`，并写一份同格式 `meta.json`（含 `name`、`status_sha256`、`installed_count`、`architectures`、`source_bundle` 等字段，可参考现有条目），`tests/test_builtin_baselines.py` 会校验清单与校验和。后续新增预设按同样方式扩充目录即可，无需改代码。
 
 绑定与覆盖：
 
@@ -414,8 +343,7 @@ GUI：无需额外操作，baseline 列表里直接就有这 7 条。
 
 ## 选择版本与多版本下载
 
-apt 的 `policy` 里常能看到一个包有多个版本（基础源 / update / bugfix / 不同 suite）。
-现在可以：
+apt 的 `policy` 里常能看到一个包有多个版本（基础源 / update / bugfix / 不同 suite）。现在可以：
 
 ```bash
 # 查看某个 profile/架构下该包的所有版本、优先级、是否可下载、来源
@@ -430,22 +358,16 @@ apt 的 `policy` 里常能看到一个包有多个版本（基础源 / update / 
   zlib1g=1:1.2.11.dfsg-2kylin1.5k0.3update1
 ```
 
-图形界面：在“软件包”输入框旁点 **“选择版本”**，输入包名后查询；
-版本列表支持 Ctrl/Shift 多选，点 **“加入软件包列表”** 后正常解析/下载。
+图形界面：在“软件包”输入框旁点 **“选择版本”**，输入包名后查询；版本列表支持 Ctrl/Shift 多选，点 **“加入软件包列表”** 后正常解析/下载。
 
 实现方式：
 
-- 同一软件包的多个版本无法在一个 apt 事务里同时安装，工具会**每个版本单独跑一次**
-  `apt-get install --download-only pkg=version`；
-- 每个版本的依赖闭包分别解析，最终把 `.deb` 去重合并到同一个 `debs/`，
-  生成一个 `manifest.json` 和一个包含多个版本的离线 apt 源；
+- 同一软件包的多个版本无法在一个 apt 事务里同时安装，工具会**每个版本单独跑一次** `apt-get install --download-only pkg=version`；
+- 每个版本的依赖闭包分别解析，最终把 `.deb` 去重合并到同一个 `debs/`，生成一个 `manifest.json` 和一个包含多个版本的离线 apt 源；
 - `manifest.json` 的 `version_plans` 记录每个版本请求组及其文件；
-- 离线源里同时存在多个版本，目标机可用 `apt install pkg=版本` 精确安装，
-  但 `apt` 默认候选仍按 pin/优先级选择最高版本；
-- 不同版本的单次下载仍沿用当前 profile/架构/baseline/Recommends 设置；
-  多版本合并时要求这些设置一致；
-- 版本查询也会走隔离 apt root，支持 **中断**；查询结果来自 `apt-cache policy`，
-  因此先 `update` 一次索引更准确。
+- 离线源里同时存在多个版本，目标机可用 `apt install pkg=版本` 精确安装，但 `apt` 默认候选仍按 pin/优先级选择最高版本；
+- 不同版本的单次下载仍沿用当前 profile/架构/baseline/Recommends 设置；多版本合并时要求这些设置一致；
+- 版本查询也会走隔离 apt root，支持 **中断**；查询结果来自 `apt-cache policy`，因此先 `update` 一次索引更准确。
 
 ## 解析与下载
 
@@ -485,11 +407,9 @@ apt 的 `policy` 里常能看到一个包有多个版本（基础源 / update / 
 勾选/取消 GUI 的 **“下载依赖”**，或命令行加 `--no-deps`：
 
 - 带依赖（默认）：`apt-get install --download-only`，下载完整依赖闭包；
-- 不带依赖：改用 `apt-get download pkg=版本`，只取请求包本身，
-  即使 baseline 显示已安装也会下载（适合单独归档/替换某个 `.deb`）；
+- 不带依赖：改用 `apt-get download pkg=版本`，只取请求包本身，即使 baseline 显示已安装也会下载（适合单独归档/替换某个 `.deb`）；
 - 此时 `manifest.json` 中 `with_dependencies` 为 `false`；
-- 生成的离线源只含请求包；目标机安装前必须已经具备依赖，
-  否则 `apt install` 仍会报缺依赖；
+- 生成的离线源只含请求包；目标机安装前必须已经具备依赖，否则 `apt install` 仍会报缺依赖；
 - 与“选择版本/多版本”可组合：
 
 ```bash
@@ -513,8 +433,7 @@ out/arm64/
 
 ## 下载任务记录
 
-每次 `kylinpkg download`（CLI 或 GUI，无论成功、失败还是中断）都会自动把任务
-配置和结果记入状态目录的 `history.json`（默认保留最近 200 条）：
+每次 `kylinpkg download`（CLI 或 GUI，无论成功、失败还是中断）都会自动把任务配置和结果记入状态目录的 `history.json`（默认保留最近 200 条）：
 
 ```bash
 # 查询任务记录
@@ -533,10 +452,8 @@ out/arm64/
 
 - 任务 ID 支持唯一前缀缩写；
 - 重做时会重新解析依赖（源里的版本可能已变化），完成后同样写入一条新记录；
-- `history show` 会打印该任务的**等价命令**，复制出来改成当前任务即可——
-  这就是“把历史任务的配置应用到当前”；
-- 对应的 GUI 入口：顶部 **“任务记录”** 按钮，可查询、**重新下载**、
-  **应用到当前参数**（自动填表：profile/基线/架构/软件包/输出目录/选项）和删除记录。
+- `history show` 会打印该任务的**等价命令**，复制出来改成当前任务即可——这就是“把历史任务的配置应用到当前”；
+- 对应的 GUI 入口：顶部 **“任务记录”** 按钮，可查询、**重新下载**、**应用到当前参数**（自动填表：profile/基线/架构/软件包/输出目录/选项）和删除记录。
 
 ## 目标机怎么用
 
@@ -598,8 +515,7 @@ sudo apt install zlib1g
 
 清理内容：
 
-- `~/.local/share/kylinpkg/roots/` 下的 apt 包索引（lists）、apt archives 缓存、
-  pkgcache、partial 下载等可重建数据；
+- `~/.local/share/kylinpkg/roots/` 下的 apt 包索引（lists）、apt archives 缓存、pkgcache、partial 下载等可重建数据；
 - **不会删除** profile、baseline、已下载到输出目录的 `.deb`/manifest/离线源；
 - 清理后会显示释放的空间；下次解析会自动重建索引。
 

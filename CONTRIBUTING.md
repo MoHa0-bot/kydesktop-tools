@@ -44,8 +44,7 @@ KYLINPKG_NET_TESTS=1 python3 -m unittest tests.test_integration -v
 
 ## 版本迭代流程
 
-版本号以 `kylinpkg/__init__.py` 的 `__version__` 为唯一来源；
-`pyproject.toml` 通过 `setuptools.dynamic` 自动读取。
+版本号以 `kylinpkg/__init__.py` 的 `__version__` 为唯一来源；`pyproject.toml` 通过 `setuptools.dynamic` 自动读取。
 
 1. 更新 `kylinpkg/__init__.py`：
    ```python
@@ -62,8 +61,7 @@ KYLINPKG_NET_TESTS=1 python3 -m unittest tests.test_integration -v
    python3 -m unittest discover -s tests -v
    ./packaging/build-deb.sh
    ```
-   如果 `README.md` 有改动，先重新生成 PDF 使用手册（随 deb 分发、
-   GUI“帮助→使用手册”打开）：
+   如果 `README.md` 有改动，先重新生成 PDF 使用手册（随 deb 分发、GUI“帮助→使用手册”打开）：
    ```bash
    python3 packaging/build-doc-pdf.py
    ```
@@ -76,8 +74,7 @@ KYLINPKG_NET_TESTS=1 python3 -m unittest tests.test_integration -v
    git push origin v0.2.1
    ```
 
-推 tag 后，GitHub Actions 的 release workflow 会构建 deb 并挂到 Release 附件。
-发布前请确认 tag 与 `__version__` 一致（workflow 会校验）。
+推 tag 后，GitHub Actions 的 release workflow 会构建 deb 并挂到 Release 附件。发布前请确认 tag 与 `__version__` 一致（workflow 会校验）。
 
 ## 新增源预设
 

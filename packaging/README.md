@@ -28,8 +28,7 @@ sudo apt -f install
 | 文档 | `/usr/share/doc/kylinpkg/` |
 | 收集脚本 | `/opt/kylinpkg/collector/kylinpkg-collect.sh` |
 
-运行时状态目录仍是 `~/.local/share/kylinpkg`，默认下载输出目录是
-`/tmp/kylinpkg-out/<profile>-<arch>`（可用 `KYLINPKG_OUTPUT_DIR` 覆盖）。
+运行时状态目录仍是 `~/.local/share/kylinpkg`，默认下载输出目录是 `/tmp/kylinpkg-out/<profile>-<arch>`（可用 `KYLINPKG_OUTPUT_DIR` 覆盖）。
 
 卸载：
 
