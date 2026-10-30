@@ -7,6 +7,22 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.4] - 2026-10-30
+
+- 新增：baseline 列表（CLI `baseline list` / GUI 基线面板）新增
+  **内核（linux-generic）** 一列，显示基线里已安装内核元包
+  `linux-generic`（及其 hwe 变体）的版本；`baseline import` 结果与
+  `baseline show` 同步输出。meta.json 新增 `kernel_version` /
+  `kernel_versions` 字段：新导入的基线导入时写入，旧基线在首次列表时
+  自动从 status 回填。
+- 变更：基于 2026-10-30 最新一批现场收集包更新内置数据。内置现场基线
+  5 份 → 7 份：新增 `sp1-2303-arm64` / `sp1-2403-arm64`；`sp1-2503-arm64`
+  用新收集包刷新（已安装包 2133 → 2084）；其余 x86 四份数据与原有一致。
+- 变更：`xc-2303-实机` 预设合入 arm64（2303 的 x86 / arm64 现场源配置一致，
+  合并为一条）；`xc-2403u2` 注明 2403 的 arm64 实机源配置同样逐行一致。
+  源行内容无变化（45 个预设 / 218 条源行不变）。
+- 修复：补上 0.3.3 漏更的 CHANGELOG compare / release 链接。
+
 ## [0.3.3] - 2026-10-29
 
 - 变更：现场实测预设 ID 更名 `xc-2203-field` / `xc-2303-field` /
@@ -312,7 +328,10 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.4
+[0.3.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.3
+[0.3.2]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.2
 [0.3.1]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.1
 [0.3.0]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.0
 [0.2.9]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.2.9

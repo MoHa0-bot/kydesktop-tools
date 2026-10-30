@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.3**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
+当前版本：**0.3.4**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，
 开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；
 PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf)
 （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
@@ -60,14 +60,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.3_all.deb
+sudo dpkg -i ./kylinpkg_0.3.4_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.3_all.deb
+sudo dpkg -i ./kylinpkg_0.3.4_all.deb
 ```
 
 安装后的路径：
@@ -237,13 +237,15 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 ### 现场实测预设（`*-实机`，2026-10 新增）
 
-来自用 `collector/kylinpkg-collect.sh` 在 5 台现场主机（均为 XC 通用版）收集的
-配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台。
+来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机（均为 XC 通用版）收集的
+配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。
 已按重复配置去重：
 
 - **`xc-2503-实机`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条
   （amd64 + arm64，含实测 `kylin.pref`：550 一档）；
-- **sp1-2403** 与官方清单 `xc-2403u2` 逐行一致，不再单列；
+- **`xc-2303-实机`**：sp1-2303 的 x86 / arm64 两台配置一致，合并为一条
+  （amd64 + arm64）；
+- **sp1-2403**（x86 / arm64）与官方清单 `xc-2403u2` 逐行一致，不再单列；
 - **`xc-2203-实机` / `xc-2303-实机`**：现场"源管理器"标准配置，
   archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单
   `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
@@ -362,19 +364,22 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 
 ### 内置现场基线（`sp1-*`，2026-10 新增）
 
-随包分发 5 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），
-来自上面「现场实测预设」同一批 5 台 XC 通用版现场主机的收集包：
+随包分发 7 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），
+来自上面「现场实测预设」同一批 7 台 XC 通用版现场主机的收集包：
 
-| 内置基线 | 已安装包 | 架构 | 对应源配置预设 |
-| --- | --- | --- | --- |
-| `sp1-2203-x86` | 1849 | amd64 | `xc-2203-实机` |
-| `sp1-2303-x86` | 1951 | amd64 | `xc-2303-实机` |
-| `sp1-2403-x86` | 2059 | amd64 | `xc-2403u2` |
-| `sp1-2503-x86` | 2093 | amd64 | `xc-2503-实机` |
-| `sp1-2503-arm64` | 2133 | arm64 | `xc-2503-实机` |
+| 内置基线 | 已安装包 | 架构 | 内核（linux-generic） | 对应源配置预设 |
+| --- | --- | --- | --- | --- |
+| `sp1-2203-x86` | 1849 | amd64 | 5.4.18.53.42 | `xc-2203-实机` |
+| `sp1-2303-x86` | 1951 | amd64 | 5.4.18.85.74 | `xc-2303-实机` |
+| `sp1-2303-arm64` | 1943 | arm64 | 5.4.18.85.74 | `xc-2303-实机` |
+| `sp1-2403-x86` | 2059 | amd64 | 5.4.18.110.99 | `xc-2403u2` |
+| `sp1-2403-arm64` | 2052 | arm64 | 5.4.18.110.99 | `xc-2403u2` |
+| `sp1-2503-x86` | 2093 | amd64 | 5.4.18.142.131 | `xc-2503-实机` |
+| `sp1-2503-arm64` | 2084 | arm64 | 5.4.18.142.131 | `xc-2503-实机` |
 
 注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置
-不同——源配置两台一致合并为一条预设）。
+不同——源配置两台一致合并为一条预设）；2303 / 2403 的 arm64 快照同样与
+对应 x86 快照包列表不同。
 
 ```bash
 # 启动时已自动导入，直接可见可用（来源标记为“内置”）
@@ -390,7 +395,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 `baselines/.builtin-sync.json`）；内置数据随包更新后会自动覆盖刷新；
 启动前已手工导入的同名基线不会被覆盖。
 
-GUI：无需额外操作，baseline 列表里直接就有这 5 条。
+GUI：无需额外操作，baseline 列表里直接就有这 7 条。
 配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境
 还原一台现场主机的完整 apt 源 + 已装包状态。
 
