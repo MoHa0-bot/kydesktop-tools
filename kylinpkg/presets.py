@@ -12,10 +12,10 @@
 仅用于老机器。
 
 2026-10 起新增 3 条「现场实测」预设（`*`*-实机`），数据来自用
-`collector/kylinpkg-collect.sh` 在 5 台现场主机（均为 XC 通用版）收集的配置包：
-sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台。已去重：
-2503 的 x86 / arm64 两台配置一致合并为一条；2403 与官方清单 `xc-2403u2`
-逐行一致不再单列。现场机器与官方清单的差异（如实收录）：
+`collector/kylinpkg-collect.sh` 在 7 台现场主机（均为 XC 通用版）收集的配置包：
+sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。已去重：
+2503 的 x86 / arm64、2303 的 x86 / arm64 配置一致各合并为一条；
+2403 的 x86 / arm64 与官方清单 `xc-2403u2` 逐行一致不再单列。现场机器与官方清单的差异（如实收录）：
 2203 / 2303 的 archive2 走 `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite；
 2503 实际使用 `10.1-2503-bugfix` suite、Pin-Priority 为 550 一档。
 
@@ -146,7 +146,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
         ],
         architectures=("amd64", "arm64", "loongarch64", "mips64el"),
         notes=(
-            "2026-10 现场实测（sp1-2403-x86 收集包）的源配置与本预设逐行一致。",
+            "2026-10 现场实测（sp1-2403-x86 与 sp1-2403-arm64 收集包）的源配置与本预设逐行一致。",
         )
     ),
     _p(
@@ -212,9 +212,9 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb %s 10.1 main restricted universe multiverse" % _ARCH,
             "deb %s V10-SP1 main all" % _DEB,
         ],
-        architectures=("amd64",),
+        architectures=("amd64", "arm64"),
         notes=(
-            "数据来自 2026-10 现场主机收集包（sp1-2303-x86）。",
+            "数据来自 2026-10 现场主机收集包（sp1-2303-x86 与 sp1-2303-arm64），两台主机配置一致，合并为一条预设。",
             "与官方清单 xc-2303 的差异：无 bugfix-limit suite；archive2 走 DEB/KYLIN_DEB 入口而非 PART partner 源。",
             "现场机器另有单机本地源 /etc/apt/sources.list.d/kylin-apps-third.list（deb [trusted=yes] file:///opt/apps-third/ ./），未收录进预设。",
         )
@@ -229,8 +229,7 @@ PRESETS: Tuple[SourcePreset, ...] = (
             "deb %s 10.1-kylin-2503 main restricted universe multiverse" % _ARCH,
             "deb %s 10.1-2503-bugfix main restricted universe multiverse" % _ARCH,
             "deb %s default all" % _PARTNER,
-        ],
-        preferences=(
+        ],        preferences=(
             "Package: *",
             "Pin: origin \"archive.kylinos.cn\"",
             "Pin: release a=10.1-kylin",

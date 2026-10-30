@@ -783,12 +783,13 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 
 
 ## 九、现场实测（主机收集，2026-10）
 
-> 以下 3 条预设来自用 `collector/kylinpkg-collect.sh` 在 5 台现场主机收集的
-> 配置包（sp1-2203 / 2303 / 2403 / 2503 各 x86 一台、sp1-2503 arm64 一台），
+> 以下 3 条预设来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机收集的
+> 配置包（sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台），
 > 均为 **XC 通用版**机器。去重说明：
 >
-> - sp1-2503 的 x86 与 arm64 两台配置一致，合并为一条 `xc-2503-实机`；
-> - sp1-2403 的配置与官方清单 `xc-2403u2` 逐行一致，不再单列；
+> - sp1-2503 的 x86 与 arm64、sp1-2303 的 x86 与 arm64 两两配置一致，
+>   分别合并为一条 `xc-2503-实机` / `xc-2303-实机`；
+> - sp1-2403（x86 / arm64）的配置与官方清单 `xc-2403u2` 逐行一致，不再单列；
 > - sp1-2203 现场 `preferences.d` 里 `archive2.pref` 与 `archive3.pref`
 >   内容完全重复（源管理器自动生成），未收录；
 > - sp1-2303 现场另有单机本地源 `kylin-apps-third.list`

@@ -16,5 +16,9 @@
   ],
   "warnings": [],
   "source_bundle": "sp1-2203-x86_kylinpkg-bundle-kylin-pc-20261028-141824.tar.gz",
-  "builtin": true
+  "builtin": true,
+  "kernel_version": "5.4.18.53.42",
+  "kernel_versions": {
+    "linux-generic": "5.4.18.53.42"
+  }
 }

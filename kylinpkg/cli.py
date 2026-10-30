@@ -384,6 +384,7 @@ def cmd_baseline_import(args, state: State) -> int:
     print("  来源：%s %s" % ((meta.get("origin") or {}).get("kind"), (meta.get("origin") or {}).get("detail")))
     print("  已安装包：%s / 记录 %s" % (meta.get("installed_count"), meta.get("package_count")))
     print("  架构：%s" % (", ".join(meta.get("architectures") or []) or "（空）"))
+    print("  内核（linux-generic）：%s" % meta.get("kernel_version", "-"))
     print("  status sha256：%s" % meta.get("status_sha256"))
     _print_warnings(meta.get("warnings") or [])
     return 0
@@ -405,12 +406,14 @@ def cmd_baseline_list(args, state: State) -> int:
     rows = []
     for meta in items:
         kind = (meta.get("origin") or {}).get("kind", "-")
+        meta = baseline_mod.ensure_kernel_info(state, meta)
         rows.append(
             [
                 meta.get("name", "?"),
                 meta.get("installed_count", 0),
                 meta.get("package_count", 0),
                 ",".join(meta.get("architectures") or []) or "-",
+                meta.get("kernel_version", "-"),
                 kind_label.get(kind, kind),
                 meta.get("created_at", "-"),
             ]
@@ -422,11 +425,12 @@ def cmd_baseline_list(args, state: State) -> int:
                 meta.get("installed_count", 0),
                 meta.get("package_count", 0),
                 ",".join(meta.get("architectures") or []) or "-",
+                meta.get("kernel_version", "-"),
                 "内置（未导入）",
                 (meta.get("created_at") or "-")[:10],
             ]
         )
-    print(_table(["名称", "已安装", "记录数", "架构", "来源", "创建时间"], rows))
+    print(_table(["名称", "已安装", "记录数", "架构", "内核(linux-generic)", "来源", "创建时间"], rows))
     if builtin_items:
         print("说明：带 * 的为随包分发的内置现场基线，尚未导入本机；")
         print("      用 kylinpkg baseline import <名称> --builtin <内置名> 创建可编辑副本。")

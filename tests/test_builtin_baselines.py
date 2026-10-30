@@ -13,7 +13,9 @@ from kylinpkg.util import KylinPkgError
 
 EXPECTED_NAMES = [
     "sp1-2203-x86",
+    "sp1-2303-arm64",
     "sp1-2303-x86",
+    "sp1-2403-arm64",
     "sp1-2403-x86",
     "sp1-2503-arm64",
     "sp1-2503-x86",
@@ -32,6 +34,8 @@ class BuiltinBaselinesTest(unittest.TestCase):
             self.assertTrue(item.get("source_bundle"), item["name"])
             self.assertTrue(item.get("status_sha256"), item["name"])
             self.assertTrue(item.get("note"), item["name"])
+            # 内核元包版本列：内置基线必须能给出 linux-generic 版本
+            self.assertRegex(str(item.get("kernel_version", "")), r"^5\.", item["name"])
 
     def test_status_gz_matches_meta(self):
         items = baseline_mod.list_builtin_baselines()
@@ -112,10 +116,10 @@ class BuiltinBaselinesTest(unittest.TestCase):
             state = State(Path(tmp) / "state").ensure()
             created = baseline_mod.ensure_builtin_baselines(state)
             self.assertEqual(sorted(created), sorted(EXPECTED_NAMES))
-            self.assertEqual(len(baseline_mod.list_baselines(state)), 5)
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 7)
             # 幂等：再次调用不重复导入
             self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
-            self.assertEqual(len(baseline_mod.list_baselines(state)), 5)
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 7)
             # 用户删除后不再自动恢复（同步标记已记录）
             baseline_mod.remove_baseline(state, "sp1-2203-x86")
             self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
@@ -134,6 +138,65 @@ class BuiltinBaselinesTest(unittest.TestCase):
             self.assertNotIn("sp1-2303-x86", created)
             current = baseline_mod.load_meta(state, "sp1-2303-x86")
             self.assertEqual(current["created_at"], manual["created_at"])
+
+
+class KernelVersionTest(unittest.TestCase):
+    STATUS = (
+        "Package: linux-generic\n"
+        "Status: install ok installed\n"
+        "Version: 5.4.18.142.131\n"
+        "\n"
+        "Package: linux-image-5.4.0-1-generic\n"
+        "Status: install ok installed\n"
+        "Version: 5.4.0-1\n"
+        "\n"
+        "Package: ukui-kwin\n"
+        "Status: install ok installed\n"
+        "Version: 1.0.2\n"
+        "\n"
+    )
+
+    def test_extract_installed_kernel_metapackage(self):
+        kv = baseline_mod.kernel_versions_from_status(self.STATUS.encode("utf-8"))
+        self.assertEqual(kv, {"linux-generic": "5.4.18.142.131"})
+        self.assertEqual(baseline_mod.kernel_display(kv), "5.4.18.142.131")
+
+    def test_not_installed_or_non_metapackage_ignored(self):
+        text = self.STATUS.replace("install ok installed\nVersion: 5.4.18.142.131", "deinstall ok config-files\nVersion: 5.4.18.142.131")
+        self.assertEqual(baseline_mod.kernel_versions_from_status(text.encode("utf-8")), {})
+        self.assertEqual(baseline_mod.kernel_display({}), "-")
+
+    def test_hwe_variant_shown_with_name(self):
+        kv = {"linux-generic": "5.4.0.1", "linux-generic-hwe-20.04": "5.10.0.2"}
+        display = baseline_mod.kernel_display(kv)
+        self.assertTrue(display.startswith("5.4.0.1;"))
+        self.assertIn("linux-generic-hwe-20.04 5.10.0.2", display)
+
+    def test_empty_status(self):
+        self.assertEqual(baseline_mod.kernel_versions_from_status(b""), {})
+
+    def test_ensure_kernel_info_backfills_old_meta(self):
+        # 老版本导入的 baseline（meta 无 kernel_version）在列表时回填
+        with tempfile.TemporaryDirectory(prefix="kylinpkg-kernel-test-") as tmp:
+            state = State(Path(tmp) / "state").ensure()
+            meta = baseline_mod.import_baseline(
+                state, "k1", from_builtin="sp1-2503-x86"
+            )
+            self.assertTrue(meta.get("kernel_version"))
+            stale = json.loads(
+                (state.baseline_dir("k1") / "meta.json").read_text(encoding="utf-8")
+            )
+            stale.pop("kernel_version", None)
+            stale.pop("kernel_versions", None)
+            (state.baseline_dir("k1") / "meta.json").write_text(
+                json.dumps(stale, ensure_ascii=False), encoding="utf-8"
+            )
+            refreshed = baseline_mod.ensure_kernel_info(state, stale)
+            self.assertEqual(refreshed["kernel_version"], meta["kernel_version"])
+            persisted = json.loads(
+                (state.baseline_dir("k1") / "meta.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(persisted["kernel_version"], meta["kernel_version"])
 
 
 if __name__ == "__main__":

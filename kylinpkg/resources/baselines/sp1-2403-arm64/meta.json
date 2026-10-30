@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "sp1-2403-arm64",
+  "created_at": "2026-10-30T10:11:41+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 sp1-2403-arm64_kylinpkg-bundle-kylin-pc-20261030-101141.tar.gz"
+  },
+  "note": "V10 SP1 2403-update2 arm64 现场主机，源配置与官方预设 xc-2403u2 逐行一致",
+  "status_sha256": "8bc3cdfc7a4eeac36023a25fa907751e2b916ea953e56bc1c7573b5fcf048adb",
+  "status_size": 2005780,
+  "package_count": 2052,
+  "installed_count": 2052,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "sp1-2403-arm64_kylinpkg-bundle-kylin-pc-20261030-101141.tar.gz",
+  "builtin": true,
+  "kernel_version": "5.4.18.110.99",
+  "kernel_versions": {
+    "linux-generic": "5.4.18.110.99"
+  }
+}

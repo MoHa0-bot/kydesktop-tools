@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "sp1-2303-arm64",
+  "created_at": "2026-10-29T15:16:26+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 sp1-2303-arm64_kylinpkg-bundle-kylin-pc-20261029-151625.tar.gz"
+  },
+  "note": "V10 SP1 2303 arm64 现场主机，源配置与 xc-2303-实机（amd64）逐行一致",
+  "status_sha256": "f01bb08f04207ff8a1d351ee2c3652cb1749ee9f61924bb1aed9cab07046e90f",
+  "status_size": 1910979,
+  "package_count": 1950,
+  "installed_count": 1943,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "sp1-2303-arm64_kylinpkg-bundle-kylin-pc-20261029-151625.tar.gz",
+  "builtin": true,
+  "kernel_version": "5.4.18.85.74",
+  "kernel_versions": {
+    "linux-generic": "5.4.18.85.74"
+  }
+}

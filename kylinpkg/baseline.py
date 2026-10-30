@@ -30,6 +30,79 @@ RESERVED_EMPTY = "empty"
 BUILTIN_BASELINES_DIR = Path(__file__).resolve().parent / "resources" / "baselines"
 
 
+# ---------------------------------------------------------------------------
+# 内核元包版本（linux-generic）——用于 baseline 列表展示
+# ---------------------------------------------------------------------------
+def kernel_versions_from_status(status_bytes: bytes) -> Dict[str, str]:
+    """从 dpkg status 提取已安装内核元包（linux-generic 系）的版本。
+
+    返回 {包名: 版本}，只统计 Status 为 install ok installed 的记录；
+    非 linux-generic 系的元包（如手装 linux-image-5.4.0-xx-generic）不在此列。
+    """
+    if not status_bytes.strip():
+        return {}
+    try:
+        paragraphs = deb822.parse_status_text(
+            status_bytes.decode("utf-8", errors="replace")
+        )
+    except KylinPkgError:
+        return {}
+    result: Dict[str, str] = {}
+    for p in paragraphs:
+        name = p.get("Package", "")
+        if name != "linux-generic" and not name.startswith("linux-generic-hwe"):
+            continue
+        if p.get("Status") != "install ok installed":
+            continue
+        result.setdefault(name, p.get("Version", ""))
+    return result
+
+
+def kernel_display(version_map: Optional[Dict[str, str]]) -> str:
+    """把内核元包版本映射格式化为列表里的一列文本。"""
+    if not version_map:
+        return "-"
+    if set(version_map) == {"linux-generic"}:
+        return version_map["linux-generic"] or "-"
+    parts = []
+    for name in sorted(version_map):
+        ver = version_map[name]
+        parts.append(ver if name == "linux-generic" else "%s %s" % (name, ver))
+    return "; ".join(parts) or "-"
+
+
+def ensure_kernel_info(state: State, meta: Dict[str, object]) -> Dict[str, object]:
+    """列表展示用：旧 baseline 的 meta 缺 kernel_version 时，从 status 现算并回写。
+
+    返回带 kernel_version / kernel_versions 字段的 meta（原对象或浅拷贝）。
+    """
+    if meta.get("kernel_version") or meta.get("empty"):
+        return meta
+    name = str(meta.get("name") or "")
+    if not name or name == RESERVED_EMPTY:
+        return meta
+    path = state.baseline_dir(name) / "status"
+    if not path.is_file():
+        return meta
+    try:
+        version_map = kernel_versions_from_status(path.read_bytes())
+    except OSError:
+        return meta
+    display = kernel_display(version_map)
+    updated = dict(meta)
+    updated["kernel_version"] = display
+    if version_map:
+        updated["kernel_versions"] = version_map
+    try:
+        atomic_write_text(
+            state.baseline_dir(name) / "meta.json",
+            json.dumps(updated, ensure_ascii=False, indent=2) + "\n",
+        )
+    except OSError:
+        pass
+    return updated
+
+
 def _status_bytes_from_system() -> bytes:
     path = Path("/var/lib/dpkg/status")
     if not path.is_file():
@@ -115,6 +188,7 @@ def _write_baseline(
 
         status_path = bdir / "status"
         atomic_write_bytes(status_path, status_bytes, 0o600)
+        kernel_map = kernel_versions_from_status(status_bytes)
         meta = {
             "schema": 1,
             "name": name,
@@ -126,8 +200,11 @@ def _write_baseline(
             "package_count": summary["package_count"],
             "installed_count": summary["installed_count"],
             "architectures": summary["architectures"],
+            "kernel_version": kernel_display(kernel_map),
             "warnings": warnings,
         }
+        if kernel_map:
+            meta["kernel_versions"] = kernel_map
         atomic_write_text(
             bdir / "meta.json", json.dumps(meta, ensure_ascii=False, indent=2) + "\n"
         )

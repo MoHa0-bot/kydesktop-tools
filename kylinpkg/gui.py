@@ -295,9 +295,9 @@ class App:
         frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         self.baseline_tree = self._make_tree(
             frame,
-            ("name", "installed", "arch", "origin"),
-            ("名称", "已安装包", "架构", "来源"),
-            (190, 80, 140, 90),
+            ("name", "installed", "arch", "kernel", "origin"),
+            ("名称", "已安装包", "架构", "内核(linux-generic)", "来源"),
+            (170, 70, 100, 130, 80),
         )
         self.baseline_tree.bind("<<TreeviewSelect>>", self._on_baseline_select)
         buttons = ttk.Frame(frame)
@@ -501,6 +501,7 @@ class App:
                 continue
             names.append(name)
             origin = meta.get("origin") or {}
+            meta = baseline_mod.ensure_kernel_info(self.state, meta)
             self.baseline_tree.insert(
                 "",
                 "end",
@@ -509,6 +510,7 @@ class App:
                     name,
                     meta.get("installed_count", 0),
                     ",".join(meta.get("architectures") or []),
+                    meta.get("kernel_version", "-"),
                     origin.get("kind", "-"),
                 ),
             )

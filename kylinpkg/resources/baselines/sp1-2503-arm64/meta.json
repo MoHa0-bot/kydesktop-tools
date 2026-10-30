@@ -1,20 +1,24 @@
 {
   "schema": 1,
   "name": "sp1-2503-arm64",
-  "created_at": "2026-10-28T16:52:30+08:00",
+  "created_at": "2026-10-30T11:35:45+08:00",
   "origin": {
     "kind": "builtin",
-    "detail": "收集包 sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261028-165229.tar.gz"
+    "detail": "收集包 sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261030-113545.tar.gz"
   },
   "note": "V10 SP1 2503 arm64 现场主机，源配置对应预设 xc-2503-实机；与 x86 包列表不同，不可互相替代",
-  "status_sha256": "10c9a878b80be420ed334e18858cfdb39a40113c5075d9bb7b4a04da0b7cfc31",
-  "status_size": 2083343,
-  "package_count": 2133,
-  "installed_count": 2133,
+  "status_sha256": "88c1eaef8cd5c1db1b66b27ae47e840843f10321a19d9c7f2e84800ef92a86b9",
+  "status_size": 2041358,
+  "package_count": 2084,
+  "installed_count": 2084,
   "architectures": [
     "arm64"
   ],
   "warnings": [],
-  "source_bundle": "sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261028-165229.tar.gz",
-  "builtin": true
+  "source_bundle": "sp1-2503-arm64_kylinpkg-bundle-kylin-pc-20261030-113545.tar.gz",
+  "builtin": true,
+  "kernel_version": "5.4.18.142.131",
+  "kernel_versions": {
+    "linux-generic": "5.4.18.142.131"
+  }
 }
