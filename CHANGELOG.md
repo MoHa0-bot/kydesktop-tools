@@ -53,27 +53,18 @@
 
 ### 新增：PDF 使用手册与帮助菜单入口
 
-- 新增 `packaging/build-doc-pdf.py`：把 `README.md` 渲染成 PDF 使用手册
-  （`docs/kylinpkg-manual.pdf`，markdown → HTML → weasyprint 打印，
-  A4 版式、页脚页码，表格/代码块防跨页拆断）。
-- GUI 菜单栏 **帮助 → 使用手册** 用系统默认程序打开该 PDF；源码运行从
-  仓库 `docs/` 查找，deb 安装后从 `/opt/kylinpkg/docs/` 查找，缺失时提示
-  重新生成。
-- `build-deb.sh` 打包时校验手册 PDF 已生成；`CONTRIBUTING.md` 发布流程
-  补充“README 有改动先重新生成手册”的步骤。
+- 新增 `packaging/build-doc-pdf.py`：把 `README.md` 渲染成 PDF 使用手册（`docs/kylinpkg-manual.pdf`，markdown → HTML → weasyprint 打印，A4 版式、页脚页码，表格/代码块防跨页拆断）。
+- GUI 菜单栏 **帮助 → 使用手册** 用系统默认程序打开该 PDF；源码运行从仓库 `docs/` 查找，deb 安装后从 `/opt/kylinpkg/docs/` 查找，缺失时提示重新生成。
+- `build-deb.sh` 打包时校验手册 PDF 已生成；`CONTRIBUTING.md` 发布流程补充“README 有改动先重新生成手册”的步骤。
 - 版本号更新为 0.2.9。
 
 ## [0.2.8] - 2026-10-28
 
 ### 变更：导入收集包界面改名并内置资料下载
 
-- GUI 顶部按钮“导入收集包”更名为 **“导入其他主机配置”**，对话框标题
-  同步调整；导入过程的状态栏与日志文案一并更新。
-- “导入其他主机配置”对话框顶部新增 **“下载收集脚本”** 与 **“使用手册”**
-  按钮，可把内置的 `collector/kylinpkg-collect.sh` 与 `collector/README.md`
-  另存到任意位置；脚本保存后自动赋予执行权限（755）。
-- 内置资料按“源码仓库根目录 → `/opt/kylinpkg/collector`”两路查找，
-  源码运行与 deb 安装均可使用。
+- GUI 顶部按钮“导入收集包”更名为 **“导入其他主机配置”**，对话框标题同步调整；导入过程的状态栏与日志文案一并更新。
+- “导入其他主机配置”对话框顶部新增 **“下载收集脚本”** 与 **“使用手册”** 按钮，可把内置的 `collector/kylinpkg-collect.sh` 与 `collector/README.md` 另存到任意位置；脚本保存后自动赋予执行权限（755）。
+- 内置资料按“源码仓库根目录 → `/opt/kylinpkg/collector`”两路查找，源码运行与 deb 安装均可使用。
 - 同步更新 `README.md`、`collector/README.md` 与收集脚本输出中的按钮文案。
 - 版本号更新为 0.2.8。
 
@@ -81,11 +72,8 @@
 
 ### 修复：GUI 窗口与任务栏没有图标
 
-- 新增随包分发的多尺寸 PNG 图标（`kylinpkg/resources/icons/`，
-  16–256px），GUI 启动时通过 `iconphoto` 设置 `_NET_WM_ICON`，
-  标题栏与任务栏恢复正常显示。
-- `tk.Tk(className="Kylinpkg")` 写入 WM_CLASS，`.desktop` 补充
-  `StartupWMClass=Kylinpkg`，启动器可正确关联窗口。
+- 新增随包分发的多尺寸 PNG 图标（`kylinpkg/resources/icons/`，16–256px），GUI 启动时通过 `iconphoto` 设置 `_NET_WM_ICON`，标题栏与任务栏恢复正常显示。
+- `tk.Tk(className="Kylinpkg")` 写入 WM_CLASS，`.desktop` 补充 `StartupWMClass=Kylinpkg`，启动器可正确关联窗口。
 - deb 打包时同时安装 hicolor 各尺寸位图（`build-deb.sh`）。
 - 版本号更新为 0.2.7。
 
@@ -93,26 +81,17 @@
 
 ### 源预设按官方外网源清单整体重建
 
-- 数据源换成《银河麒麟桌面外网源.xls》（在线推送使用的正式源，外网），
-  取代已过时的《银河麒麟桌面版软件源地址汇总.md》；纯文本副本写入
-  `docs/kylin-desktop-sources.md`。
-- 预设从 26 个 / 88 条源行扩到 **42 个 / 208 条源行**，按 xls 的产线划分：
-  XC 通用版 6、HWE 硬件启用栈 10、Wayland 24（麒麟 990 / 9006C / 9000C、
-  盘古 M900、华为 Pangux·Flemingx·Panguy·Panguw），另保留 V10 非 SP1 历史预设 2 条。
-- 预设 ID 改为产线命名 `xc-*` / `hwe-*` / `wl-*`，旧的 `sp1-*` ID 全部移除
-  （破坏性变更，见 README“与旧版源汇总的差异”）。
-- 2503 的 bugfix suite 按 xls 统一为 `10.1-2503-bugfix-limit`；
-  新增 `*-update3`、`10.1-2403-wayland-*` 等 suite。
+- 数据源换成《银河麒麟桌面外网源.xls》（在线推送使用的正式源，外网），取代已过时的《银河麒麟桌面版软件源地址汇总.md》；纯文本副本写入 `docs/kylin-desktop-sources.md`。
+- 预设从 26 个 / 88 条源行扩到 **42 个 / 208 条源行**，按 xls 的产线划分：XC 通用版 6、HWE 硬件启用栈 10、Wayland 24（麒麟 990 / 9006C / 9000C、盘古 M900、华为 Pangux·Flemingx·Panguy·Panguw），另保留 V10 非 SP1 历史预设 2 条。
+- 预设 ID 改为产线命名 `xc-*` / `hwe-*` / `wl-*`，旧的 `sp1-*` ID 全部移除（破坏性变更，见 README“与旧版源汇总的差异”）。
+- 2503 的 bugfix suite 按 xls 统一为 `10.1-2503-bugfix-limit`；新增 `*-update3`、`10.1-2403-wayland-*` 等 suite。
 - HWE 源不再使用 `archive2` 的 `KY-V10-SP1-$(ARCH)` 桌面源，`$(ARCH)` 占位逻辑随之移除。
 
 ### 新增：预设自带的 apt 优先级配置
 
-- `SourcePreset` 增加 `preferences` 字段，收录 xls 中 11 条配置的
-  `/etc/apt/preferences.d/kylin.pref`（`Pin-Priority`）。
-- `profile.create_from_preset()` 在有 `preferences` 时写入 profile 的
-  `preferences.d/kylin.pref`，并追加一条警告提示核对 Pin-Priority 与本机版本。
-- `preset_text()` 输出优先级段落；GUI 预设列表新增“优先级”列，
-  详情头里显示是否带 `kylin.pref`。
+- `SourcePreset` 增加 `preferences` 字段，收录 xls 中 11 条配置的 `/etc/apt/preferences.d/kylin.pref`（`Pin-Priority`）。
+- `profile.create_from_preset()` 在有 `preferences` 时写入 profile 的 `preferences.d/kylin.pref`，并追加一条警告提示核对 Pin-Priority 与本机版本。
+- `preset_text()` 输出优先级段落；GUI 预设列表新增“优先级”列，详情头里显示是否带 `kylin.pref`。
 - 测试新增优先级落盘校验；`test_presets.py` 的 26/88 硬编码更新为 42/208。
 
 ### 其他
@@ -149,38 +128,30 @@
 ### 变更
 
 - 按最新修正版源汇总重新同步 26 个预设 / 88 条 `deb` 源行；
-- Kirin/Pangwu 相关 partner/feature 路径由 `10.1-`/`PART-10.1-`
-  更新为 `10_1-`/`PART-10_1-`；
+- Kirin/Pangwu 相关 partner/feature 路径由 `10.1-`/`PART-10.1-` 更新为 `10_1-`/`PART-10_1-`；
 - 第 12 条按修正版文档保留 `10.1-kirin9a0` 的 partner suite；
-- 保留盘古（Pangwu）= 华为海思 / ARM64 的已确认说明；修正版文档术语表
-  仍写“飞腾”，仓库 `docs/` 与预设继续使用已确认版本；
+- 保留盘古（Pangwu）= 华为海思 / ARM64 的已确认说明；修正版文档术语表仍写“飞腾”，仓库 `docs/` 与预设继续使用已确认版本；
 - 版本号更新为 0.2.3，重新构建 deb。
 
 ## [0.2.2] - 2026-10-27
 
 ### 修复
 
-- 纠正盘古（Pangwu）说明：盘古是华为海思的芯片产品线，ARM64 架构，
-  不是飞腾平台；同步修正 `presets.py`、`docs/` 和 README。
-- 移除预设中的 `_LEGACY_NOTE`。修正版源数据已无 OCR 空格，源地址直接使用
-  `PART-10.1-kirin...`，不再提示用户手工替换。
+- 纠正盘古（Pangwu）说明：盘古是华为海思的芯片产品线，ARM64 架构，不是飞腾平台；同步修正 `presets.py`、`docs/` 和 README。
+- 移除预设中的 `_LEGACY_NOTE`。修正版源数据已无 OCR 空格，源地址直接使用 `PART-10.1-kirin...`，不再提示用户手工替换。
 - 预设名称/描述中的“普通版”统一改为“通用版”（2303、2503）。
-- 预设与文档一致性测试不再做 OCR 空格归一，只保留重复组件归一；
-  新增“预设名称/描述不含‘普通版’”断言。
+- 预设与文档一致性测试不再做 OCR 空格归一，只保留重复组件归一；新增“预设名称/描述不含‘普通版’”断言。
 
 ### 变更
 
-- 按最新修正版重新对齐：源行 86 → 88，更新 V10SP1-2107/0521-HWE
-  的 KY desktop / partner / 基础源；`$(ARCH)` 在创建 profile 时替换为主架构
-  （amd64/arm64 已验证）。
+- 按最新修正版重新对齐：源行 86 → 88，更新 V10SP1-2107/0521-HWE 的 KY desktop / partner / 基础源；`$(ARCH)` 在创建 profile 时替换为主架构（amd64/arm64 已验证）。
 - 版本号更新为 0.2.2，重新构建 deb。
 
 ## [0.2.1] - 2026-10-27
 
 ### 变更
 
-- 按修正版《银河麒麟桌面版软件源地址汇总.md》重新解析并逐行核对
-  26 个源预设 / 86 条 `deb` 源行；
+- 按修正版《银河麒麟桌面版软件源地址汇总.md》重新解析并逐行核对 26 个源预设 / 86 条 `deb` 源行；
 - 补充盘古（Pangwu）平台说明，两个盘古预设继续按 arm64 处理；
 - `docs/kylin-desktop-sources.md` 同步修正版原文；
 - 新增 `test_presets_match_corrected_document`，防止文档与预设再次漂移；
@@ -192,8 +163,7 @@
 
 ### 新增
 
-- **隔离 apt root**：所有 apt 操作在独立 `Dir` 中完成，不修改本机
-  `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`。
+- **隔离 apt root**：所有 apt 操作在独立 `Dir` 中完成，不修改本机 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`。
 - **profile（apt 源配置）**：
   - 从本机、SSH、rootfs、导出的 `sources.list`/`sources.list.d` 导入；
   - 支持 `.list`、deb822 `.sources`、`preferences`/pin、keyring、`auth.conf`；
@@ -204,9 +174,7 @@
   - 从 status 文件、本机、SSH、rootfs、空基线导入；
   - 全量闭包与增量补包两种模式；
   - 基线架构与目标架构不一致时明确报错。
-- **CLI**：`profile`、`baseline`、`preset`、`bundle`、`versions`、
-  `update`、`resolve`、`download`、`repo`、`verify`、`list`、`gui`、
-  `doctor`、`gc`。
+- **CLI**：`profile`、`baseline`、`preset`、`bundle`、`versions`、`update`、`resolve`、`download`、`repo`、`verify`、`list`、`gui`、`doctor`、`gc`。
 - **GUI（tkinter）**：
   - profile/baseline 导入、绑定、删除；
   - 26 个麒麟源预设，支持预览和创建；
@@ -217,12 +185,9 @@
   - **清理缓存**按钮；
   - 导入原始主机收集包；
   - 按钮文案去省略号、源配置按钮单行显示、删除按钮收窄。
-- **26 个内置源预设**：解析自《银河麒麟桌面版软件源地址汇总.md》，
-  覆盖 V10、SP1 2107/2203/2303/2403/2503、海思麒麟、盘古等；
-  对 OCR 空格、重复组件、404 suite、`bugfix`/`bugfix-limit` 差异做了注释。
+- **26 个内置源预设**：解析自《银河麒麟桌面版软件源地址汇总.md》，覆盖 V10、SP1 2107/2203/2303/2403/2503、海思麒麟、盘古等；对 OCR 空格、重复组件、404 suite、`bugfix`/`bugfix-limit` 差异做了注释。
 - **原始主机收集包**：
-  - `collector/kylinpkg-collect.sh`：收集完整 dpkg status、apt 源、
-    preferences、keyrings、系统元数据，生成带 `SHA256SUMS` 的 tar.gz；
+  - `collector/kylinpkg-collect.sh`：收集完整 dpkg status、apt 源、preferences、keyrings、系统元数据，生成带 `SHA256SUMS` 的 tar.gz；
   - `bundle inspect/import`：一键导入 profile + baseline；
   - 支持跨架构导入和 `auth.conf`（显式 `--with-auth`）。
 - **版本下载**：
@@ -230,17 +195,14 @@
   - `pkg=version` 精确版本；
   - 同一软件包多个版本分别解析、合并去重到一个 `debs/`、manifest 和离线源；
   - `manifest.json` 增加 `version_plans`、`with_dependencies`。
-- **离线源**：`apt-ftparchive` 生成 `Packages`/`Packages.gz`/`Release`/
-  `sources.list`，支持多版本共存。
-- **缓存管理**：`gc --cache` / `--roots`，GUI 一键清理隔离索引和包缓存，
-  保留 profile、baseline 和下载结果。
+- **离线源**：`apt-ftparchive` 生成 `Packages`/`Packages.gz`/`Release`/`sources.list`，支持多版本共存。
+- **缓存管理**：`gc --cache` / `--roots`，GUI 一键清理隔离索引和包缓存，保留 profile、baseline 和下载结果。
 - **打包**：
   - deb 安装到 `/opt/kylinpkg`；
   - `/usr/bin/kylinpkg`、`/usr/bin/kylinpkg-gui` 软链；
   - `/usr/share/applications/kylinpkg.desktop` 和图标；
   - `packaging/build-deb.sh`。
-- **默认输出目录**：`/tmp/kylinpkg-out/<profile>-<架构>`，
-  可用 `-o` 或 `KYLINPKG_OUTPUT_DIR` 覆盖。
+- **默认输出目录**：`/tmp/kylinpkg-out/<profile>-<架构>`，可用 `-o` 或 `KYLINPKG_OUTPUT_DIR` 覆盖。
 - **CI/发布**：GitHub Actions 运行测试、构建 deb；tag `v*` 自动发布。
 
 ### 变更
@@ -248,8 +210,7 @@
 - apt 默认使用 `Acquire::ForceIPv4=true`，降低 IPv6 路由导致的卡顿。
 - profile 导入后自动物化 `Signed-By` keyring 并改写源文件，便于跨机器复用。
 - GUI 默认输出目录从当前目录改为 `/tmp/kylinpkg-out`。
-- GUI 源配置按钮从两行合并为一行：`从预设创建 / 从本机导入 / 编辑源配置 /
-  更多 / 删除`；`导入源配置` 与 `从 rootfs 导入` 收进“更多”菜单。
+- GUI 源配置按钮从两行合并为一行：`从预设创建 / 从本机导入 / 编辑源配置 / 更多 / 删除`；`导入源配置` 与 `从 rootfs 导入` 收进“更多”菜单。
 - `pyproject.toml` 版本改为从 `kylinpkg.__version__` 动态读取。
 
 ### 修复
@@ -272,8 +233,7 @@
 
 ### 新增
 
-- 隔离 apt root 的核心验证：`Dir` 重定向、空 status 全量闭包、
-  多 suite/多架构解析、`--print-uris` 计划、apt 下载与 hash 校验。
+- 隔离 apt root 的核心验证：`Dir` 重定向、空 status 全量闭包、多 suite/多架构解析、`--print-uris` 计划、apt 下载与 hash 校验。
 - 基础 profile/baseline 导入。
 - `resolve` / `download` / `repo` / `verify` 的初版。
 - 离线扁平 apt 源生成与 `file://` 回灌验证。
