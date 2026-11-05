@@ -6,9 +6,10 @@
 > 本文档是清单的纯文本副本，`kylinpkg/presets.py` 与本文逐行对应，
 > `tests/test_presets.py` 会校验两者一致。
 
-总计 45 条配置 / 218 条 `deb` 源行，其中 12 条附带的
+总计 49 条配置 / 230 条 `deb` 源行，其中 14 条附带的
 `/etc/apt/preferences.d/kylin.pref` 优先级（Pin-Priority）设置也已收录。
-其中 3 条为 2026-10 现场实测预设（`*-实机`，见第九节），其余 42 条来自 xls。
+其中 7 条为现场实测预设（`*-实机`，见第九节：2026-10 三条 + 2026-11 四条），
+其余 42 条来自 xls。
 
 ---
 
@@ -781,11 +782,12 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 
 
 ---
 
-## 九、现场实测（主机收集，2026-10）
+## 九、现场实测（主机收集，2026-10 / 2026-11）
 
-> 以下 3 条预设来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机收集的
-> 配置包（sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台），
-> 均为 **XC 通用版**机器。去重说明：
+> 以下 7 条预设来自用 `collector/kylinpkg-collect.sh` 在现场主机收集的配置包。
+>
+> **2026-10 批次**（7 台 XC 通用版主机：sp1-2203 / 2303 / 2403 / 2503 各 x86、
+> arm64 一台）去重说明：
 >
 > - sp1-2503 的 x86 与 arm64、sp1-2303 的 x86 与 arm64 两两配置一致，
 >   分别合并为一条 `xc-2503-实机` / `xc-2303-实机`；
@@ -798,6 +800,18 @@ deb http://archive2.kylinos.cn/deb/kylin/production/PART-V10/custom/partner/V10 
 > 现场机器与官方清单的差异**如实收录**：2203 / 2303 的 archive2 走
 > `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite；2503 实际使用
 > `10.1-2503-bugfix`（非 `-limit`）suite，Pin-Priority 为 550 一档。
+>
+> **2026-11 批次**（两台 V10 (juniper) 虚拟机 + 三台麒麟 990 Wayland 主机）：
+>
+> - V10-2107 与 V10-0710 两台虚拟机配置一致，合并为一条 `v10-2107-实机`
+>   （内核分别为 4.4.131-20210817 / 4.4.131-20200710，包列表不同，基线分列）；
+> - `wl-2203-990-实机`（L410 整机）：无 bugfix-limit suite，未配置 preferences；
+> - `wl-2303u1-990-实机`：无 bugfix-limit suite，partner 源走
+>   `DEB/KYLIN_DEB` 的 `10_1-kirin9a0` suite（http），
+>   `archive1-4.pref` 每条 Pin-Priority 均为 500，如实收录；
+> - `wl-2403u1-990-实机`：使用 OEM 硬件 990 专属 `update1-oem-hw` suite
+>   （官方清单无对应条目），仅有 partner 与该 suite 两条源，
+>   `archive1-2.pref` Pin-Priority 均为 500，如实收录。
 
 ### V10 SP1 XC-2203（实机）（xc-2203-实机）
 
@@ -846,6 +860,77 @@ Pin-Priority: 550
 Package: *
 Pin: origin "archive2.kylinos.cn"
 Pin-Priority: 550
+```
+
+### V10-2107 / V10-0710（实机）（v10-2107-实机）
+
+两台 V10 (juniper) 虚拟机（amd64）配置一致，合并为一条；机器未配置 preferences：
+
+```
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0-fixs main
+deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10 main all
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.0 main universe multiverse restricted
+```
+
+### Wayland 2203 · 麒麟 990（实机）（wl-2203-990-实机）
+
+L410 整机（arm64，内核 4.19.71-23-kr990），未配置 preferences：
+
+```
+deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2203-updates main universe restricted multiverse
+deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin990-feature main
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all
+```
+
+### Wayland 2303-update1 · 麒麟 990（实机）（wl-2303u1-990-实机）
+
+现场主机（arm64，内核 4.19.71-30-kr990）。优先级为现场
+`preferences.d/archive1-4.pref` 原文（每条 Pin-Priority 均为 500）：
+
+```
+deb http://archive2.kylinos.cn/DEB/KYLIN_DEB 10_1-kirin9a0 main all
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-kirin990-2303-feature main
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1 main restricted universe multiverse
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-wayland-2303-updates main restricted universe multiverse
+```
+
+```
+Package: *
+Pin: release a=10_1-kirin9a0
+Pin-Priority: 500
+
+Package: *
+Pin: release a=10.1-kirin990-2303-feature
+Pin-Priority: 500
+
+Package: *
+Pin: release a=10.1
+Pin-Priority: 500
+
+Package: *
+Pin: release a=10.1-wayland-2303-updates
+Pin-Priority: 500
+```
+
+### Wayland 2403-update1 · 麒麟 990（实机）（wl-2403u1-990-实机）
+
+现场主机（arm64，oem-hw 内核 4.19.71-46-kr990），使用 OEM 硬件 990 专属
+`10.1-2403-wayland-update1-oem-hw-990` suite。优先级为现场
+`preferences.d/archive1-2.pref` 原文（Pin-Priority 均为 500）：
+
+```
+deb https://archive2.kylinos.cn/deb/kylin/production/PART-10_1-kirin9a0/custom/partner/10_1-kirin9a0 default all
+deb https://archive.kylinos.cn/kylin/KYLIN-ALL 10.1-2403-wayland-update1-oem-hw-990 main restricted universe multiverse
+```
+
+```
+Package: *
+Pin: release a=default
+Pin-Priority: 500
+
+Package: *
+Pin: release a=10.1-2403-wayland-update1-oem-hw-990
+Pin-Priority: 500
 ```
 
 ---

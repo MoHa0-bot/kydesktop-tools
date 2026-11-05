@@ -7,6 +7,14 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.6] - 2026-11-05
+
+- 新增：基于 2026-11-05 新一批现场收集包新增 4 条「现场实测」源预设与 5 份内置现场基线。预设 45 → 49（新增 `v10-2107-实机` / `wl-2203-990-实机` / `wl-2303u1-990-实机` / `wl-2403u1-990-实机`），源行 218 → 230，带优先级配置的预设 12 → 14（wl-2303u1-990-实机、wl-2403u1-990-实机各带现场 `archive*.pref` 的 Pin-Priority 500 配置）。`docs/kylin-desktop-sources.md` 第九节同步扩充（分 2026-10 / 2026-11 两批说明）。
+- 新增：内置现场基线 7 → 12 份：新增 `v10-2107`（amd64，1790 包）、`v10-0710`（amd64，1768 包）、`wl-2203-990`（arm64，1702 包，L410 整机）、`wl-2303u1-990`（arm64，1867 包）、`wl-2403u1-990`（arm64，2000 包）。V10-2107 / V10-0710 两台虚拟机源配置一致（预设合并为一条），但包列表不同，基线分列。本批 7 份 sp1-* 收集包与现有内置数据逐字节一致，未刷新。
+- 变更：现场机器与官方清单的差异如实收录——V10 虚拟机无 partner juniper 源、archive2 走 `DEB/KYLIN_DEB` V10 suite；wl-2203-990 无 bugfix-limit suite 且未配置 preferences；wl-2303u1-990 无 bugfix-limit suite、partner 源走 `DEB/KYLIN_DEB` 的 `10_1-kirin9a0` suite；wl-2403u1-990 使用 OEM 硬件 990 专属 `10.1-2403-wayland-update1-oem-hw-990` suite（官方清单无对应条目）。
+- 变更：baseline 列表（CLI `baseline list` / GUI 基线面板）的「内核」列扩展取值来源：`linux-generic`（及其 hwe 变体）元包缺失时回退到带版本号的内核镜像包（`linux-image-*-kr990`、`kylin-image-*-generic`），显示包名中的内核 release（uname 风格），麒麟 990 Wayland 与 V10 基础版机型因此也能显示内核版本；表头不再标注 linux-generic。
+- 变更：内核列显示规则与镜像包回退逻辑写入 `README.md`（含 12 份内置基线总表）。
+
 ## [0.3.5] - 2026-10-30
 
 - 新增：GUI 的 **apt 源配置（profile）** 与 **dpkg 初始状态（baseline）** 两个面板顶部各加一个**搜索栏**，按展示列（名称、架构，baseline 面板另含内核版本与来源）不区分大小写实时过滤列表；无匹配时列表清空并提示，下方下拉选择框仍保留全部可选值，不受搜索影响。
@@ -249,7 +257,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.6...HEAD
+[0.3.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.6
 [0.3.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.5
 [0.3.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.4
 [0.3.3]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.3

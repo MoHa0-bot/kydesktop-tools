@@ -34,10 +34,16 @@ BUILTIN_BASELINES_DIR = Path(__file__).resolve().parent / "resources" / "baselin
 # 内核元包版本（linux-generic）——用于 baseline 列表展示
 # ---------------------------------------------------------------------------
 def kernel_versions_from_status(status_bytes: bytes) -> Dict[str, str]:
-    """从 dpkg status 提取已安装内核元包（linux-generic 系）的版本。
+    """从 dpkg status 提取已安装内核的版本（列表「内核」列数据源）。
+
+    优先取内核元包：`linux-generic` 及其 hwe 变体（SP1 通用机型）。
+    没有元包时回退到带版本号的内核镜像包（包名内含内核 release）：
+    `linux-image-4.19.71-46-kr990`（麒麟 990 平台）与
+    `kylin-image-4.4.131-20200710-generic`（V10 基础版），
+    取包名中的内核 release（uname 风格）作为版本。
 
     返回 {包名: 版本}，只统计 Status 为 install ok installed 的记录；
-    非 linux-generic 系的元包（如手装 linux-image-5.4.0-xx-generic）不在此列。
+    镜像包附件（linux-image-extra-…）不在此列。
     """
     if not status_bytes.strip():
         return {}
@@ -47,19 +53,30 @@ def kernel_versions_from_status(status_bytes: bytes) -> Dict[str, str]:
         )
     except KylinPkgError:
         return {}
-    result: Dict[str, str] = {}
+    metas: Dict[str, str] = {}
+    images: Dict[str, str] = {}
     for p in paragraphs:
         name = p.get("Package", "")
-        if name != "linux-generic" and not name.startswith("linux-generic-hwe"):
-            continue
         if p.get("Status") != "install ok installed":
             continue
-        result.setdefault(name, p.get("Version", ""))
-    return result
+        if name == "linux-generic" or name.startswith("linux-generic-hwe"):
+            metas.setdefault(name, p.get("Version", ""))
+            continue
+        for prefix in ("linux-image-", "kylin-image-"):
+            if not name.startswith(prefix):
+                continue
+            rest = name[len(prefix):]
+            # 只要包名带内核版本的镜像包；跳过 extra 等附件与无版本号的平台元包
+            if rest and rest[0].isdigit() and not rest.startswith("extra-"):
+                images.setdefault(name, rest)
+            break
+    if metas:
+        return metas
+    return images
 
 
 def kernel_display(version_map: Optional[Dict[str, str]]) -> str:
-    """把内核元包版本映射格式化为列表里的一列文本。"""
+    """把内核版本映射格式化为列表里的一列文本。"""
     if not version_map:
         return "-"
     if set(version_map) == {"linux-generic"}:
@@ -67,7 +84,11 @@ def kernel_display(version_map: Optional[Dict[str, str]]) -> str:
     parts = []
     for name in sorted(version_map):
         ver = version_map[name]
-        parts.append(ver if name == "linux-generic" else "%s %s" % (name, ver))
+        if name == "linux-generic" or (ver and name.endswith(ver)):
+            # linux-generic 元包或镜像包（版本即包名尾部）只显示版本
+            parts.append(ver)
+        else:
+            parts.append("%s %s" % (name, ver))
     return "; ".join(parts) or "-"
 
 

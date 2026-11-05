@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.5**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
+当前版本：**0.3.6**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
 
 ## apt 到底依赖哪些信息
 
@@ -57,14 +57,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.5_all.deb
+sudo dpkg -i ./kylinpkg_0.3.6_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.5_all.deb
+sudo dpkg -i ./kylinpkg_0.3.6_all.deb
 ```
 
 安装后的路径：
@@ -151,9 +151,9 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 - 跨架构使用：`bundle import ... --profile xxx-arm64 --arch arm64 --no-bind` （原基线是 amd64 时不能绑定到 arm64 profile）。
 - 更多细节见 `collector/README.md`。
 
-## 内置源预设（45 个）
+## 内置源预设（49 个）
 
-数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。共 45 个预设 / 218 条 `deb` 源行，其中 12 条附带 `kylin.pref` 优先级配置；另有 3 条为 2026-10 现场实测预设（见下文「现场实测预设」）。
+数据解析自《银河麒麟桌面外网源.xls》——**在线推送使用的正式源（外网）**，纯文本副本保存在 `docs/kylin-desktop-sources.md`，已内置到 `kylinpkg/presets.py`。共 49 个预设 / 230 条 `deb` 源行，其中 14 条附带 `kylin.pref` 优先级配置；另有 7 条为现场实测预设（2026-10 三条 + 2026-11 四条，见下文「现场实测预设」）。
 
 ```bash
 # 查看全部预设
@@ -177,12 +177,12 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 | --- | --- | --- |
 | XC 产线（通用版） | 9 | `xc-2107`、`xc-2203`、`xc-2303`、`xc-2303u2`、`xc-2403u2`、`xc-2503`、`xc-2203-实机`、`xc-2303-实机`、`xc-2503-实机`（后 3 条为现场实测） |
 | HWE 硬件启用栈 | 10 | `hwe-2107`、`hwe-2203`、`hwe-2303`、`hwe-2303u2`、`hwe-2403u2`、`hwe-2503`、`hwe-pp-2303`、`hwe-pp-2303u2`、`hwe-pp-2403u2`、`hwe-pp-2503` |
-| Wayland · 麒麟 990 | 6 | `wl-2107-990`、`wl-2203-990`、`wl-2303-990`、`wl-2303u2-990`、`wl-2403u2-990`、`wl-2503-990` |
+| Wayland · 麒麟 990 | 9 | `wl-2107-990`、`wl-2203-990`、`wl-2303-990`、`wl-2303u2-990`、`wl-2403u2-990`、`wl-2503-990`、`wl-2203-990-实机`、`wl-2303u1-990-实机`、`wl-2403u1-990-实机`（后 3 条为现场实测） |
 | Wayland · 麒麟 9006C | 6 | `wl-2107-9006c`、`wl-2203-9006c`、`wl-2303-9006c`、`wl-2303u2-9006c`、`wl-2403u2-9006c`、`wl-2503-9006c` |
 | Wayland · 盘古 M900（Pangwu） | 3 | `wl-2303u2-m900`、`wl-2403u2-m900`、`wl-2503-m900` |
 | Wayland · 麒麟 9000C | 6 | `wl-2403-9000c`、`wl-2403u1-9000c`、`wl-2403u2-9000c`、`wl-2503-9000c`、`wl-pangux-a-2403`、`wl-pangux-b` |
 | Wayland · 华为其他平台 | 3 | `wl-flemingx`、`wl-panguy`、`wl-2107-panguw` |
-| V10 基础版（非 SP1，历史） | 2 | `v10-2107`、`v10-2203` |
+| V10 基础版（非 SP1，历史） | 3 | `v10-2107`、`v10-2203`、`v10-2107-实机`（末条为 2026-11 虚拟机实测） |
 
 架构缺省规则：
 
@@ -195,15 +195,24 @@ scp user@target:/tmp/kylinpkg-bundle-*.tar.gz ./
 
 2503 各产线（`xc-2503`、`hwe-2503`、`hwe-pp-2503`、以及 Wayland 2503 各芯片分支）和华为 Pangux/Flemingx/Panguy 平台在 xls 里附带了 `/etc/apt/preferences.d/kylin.pref` 的 `Pin-Priority` 设置。这些预设带有 `preferences` 字段，创建 profile 时会自动写进 `preferences.d/kylin.pref`，并给出一条警告提示确认 Pin-Priority 与本机系统版本匹配。创建后可在“查看/编辑源配置”里直接修改。
 
-### 现场实测预设（`*-实机`，2026-10 新增）
+### 现场实测预设（`*-实机`，2026-10 / 2026-11 新增）
 
-来自用 `collector/kylinpkg-collect.sh` 在 7 台现场主机（均为 XC 通用版）收集的配置包：sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。已按重复配置去重：
+来自用 `collector/kylinpkg-collect.sh` 在 10 台现场主机 / 虚拟机收集的配置包。
+
+**2026-10 批次**（7 台 XC 通用版主机：sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台），已按重复配置去重：
 
 - **`xc-2503-实机`**：sp1-2503 的 x86 / arm64 两台配置一致，合并为一条（amd64 + arm64，含实测 `kylin.pref`：550 一档）；
 - **`xc-2303-实机`**：sp1-2303 的 x86 / arm64 两台配置一致，合并为一条（amd64 + arm64）；
 - **sp1-2403**（x86 / arm64）与官方清单 `xc-2403u2` 逐行一致，不再单列；
 - **`xc-2203-实机` / `xc-2303-实机`**：现场"源管理器"标准配置，archive2 走 `DEB/KYLIN_DEB` 入口、无 bugfix-limit suite，与官方清单 `xc-2203` / `xc-2303` 并存，按现场机器实际状态选用；
 - sp1-2203 现场重复的 pref、sp1-2303 的单机本地源（`/opt/apps-third/`）未收录，差异细节见 `docs/kylin-desktop-sources.md` 第九节。
+
+**2026-11 批次**（2 台 V10 虚拟机 + 3 台麒麟 990 Wayland 主机）：
+
+- **`v10-2107-实机`**：V10-2107 / V10-0710 两台 V10 (juniper) 虚拟机配置一致，合并为一条（amd64）；与历史预设 `v10-2107` 的差异：无 partner juniper 源，archive2 走 `DEB/KYLIN_DEB` 的 V10 suite；
+- **`wl-2203-990-实机`**（L410 整机）：无 bugfix-limit suite，未配置 preferences；
+- **`wl-2303u1-990-实机`**：无 bugfix-limit suite，partner 源走 `DEB/KYLIN_DEB` 的 `10_1-kirin9a0` suite，含 4 条 Pin-Priority 500 的实测优先级；
+- **`wl-2403u1-990-实机`**：OEM 硬件 990 专属 `10.1-2403-wayland-update1-oem-hw-990` suite（官方清单无对应条目），仅两条源，含 2 条 Pin-Priority 500 的实测优先级。
 
 ### 与旧版源汇总的差异
 
@@ -304,11 +313,11 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 > `dpkg --get-selections` 只有包名和状态，不能用于 apt 依赖求解。
 > 跨架构下载时 baseline 也必须同架构：amd64 的基线不能用于 arm64；此时用 `--full`，或导入 arm64 目标机的 status。
 
-### 内置现场基线（`sp1-*`，2026-10 新增）
+### 内置现场基线（`sp1-*` / `v10-*` / `wl-*`，2026-10 / 2026-11 新增）
 
-随包分发 7 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），来自上面「现场实测预设」同一批 7 台 XC 通用版现场主机的收集包：
+随包分发 12 份 dpkg 初始状态快照（gzip 存储于 `kylinpkg/resources/baselines/`），来自上面「现场实测预设」同一批 10 台现场主机 / 虚拟机的收集包：
 
-| 内置基线 | 已安装包 | 架构 | 内核（linux-generic） | 对应源配置预设 |
+| 内置基线 | 已安装包 | 架构 | 内核 | 对应源配置预设 |
 | --- | --- | --- | --- | --- |
 | `sp1-2203-x86` | 1849 | amd64 | 5.4.18.53.42 | `xc-2203-实机` |
 | `sp1-2303-x86` | 1951 | amd64 | 5.4.18.85.74 | `xc-2303-实机` |
@@ -317,6 +326,11 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 | `sp1-2403-arm64` | 2052 | arm64 | 5.4.18.110.99 | `xc-2403u2` |
 | `sp1-2503-x86` | 2093 | amd64 | 5.4.18.142.131 | `xc-2503-实机` |
 | `sp1-2503-arm64` | 2084 | arm64 | 5.4.18.142.131 | `xc-2503-实机` |
+| `v10-2107` | 1790 | amd64 | 4.4.131-20210817-generic | `v10-2107-实机` |
+| `v10-0710` | 1768 | amd64 | 4.4.131-20200710-generic | `v10-2107-实机` |
+| `wl-2203-990` | 1702 | arm64 | 4.19.71-23-kr990 | `wl-2203-990-实机` |
+| `wl-2303u1-990` | 1867 | arm64 | 4.19.71-30-kr990 | `wl-2303u1-990-实机` |
+| `wl-2403u1-990` | 2000 | arm64 | 4.19.71-46-kr990 | `wl-2403u1-990-实机` |
 
 注意 2503 的 x86 / arm64 两份**包列表不同**，不能互相替代（这一点与源配置不同——源配置两台一致合并为一条预设）；2303 / 2403 的 arm64 快照同样与对应 x86 快照包列表不同。
 
@@ -330,7 +344,9 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 
 内置基线在 CLI / GUI **启动时自动导入**（幂等）：state 里缺哪条补哪条，列表中与手工导入的 baseline 无任何区别，可直接绑定 profile、参与解析。删除规则：你手动删除的内置基线不会被再次导入（同步标记记录在 state 的 `baselines/.builtin-sync.json`）；内置数据随包更新后会自动覆盖刷新；启动前已手工导入的同名基线不会被覆盖。
 
-GUI：无需额外操作，baseline 列表里直接就有这 7 条。配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境还原一台现场主机的完整 apt 源 + 已装包状态。
+GUI：无需额外操作，baseline 列表里直接就有这 12 条。配合同名实机预设（如 `xc-2503-实机` + `sp1-2503-arm64`）即可在离线环境还原一台现场主机的完整 apt 源 + 已装包状态。
+
+内核列的取值：优先取 `linux-generic`（及其 hwe 变体）元包的版本（SP1 通用机型）；没有该元包的机器（麒麟 990 Wayland、V10 基础版）回退到带版本号的内核镜像包（如 `linux-image-4.19.71-46-kr990`、`kylin-image-4.4.131-20200710-generic`），显示包名中的内核 release（uname 风格）。
 
 **新增内置基线的约定**：把收集包里 `rootfs/var/lib/dpkg/status` 以 gzip 存为 `kylinpkg/resources/baselines/<名称>/status.gz`，并写一份同格式 `meta.json`（含 `name`、`status_sha256`、`installed_count`、`architectures`、`source_bundle` 等字段，可参考现有条目），`tests/test_builtin_baselines.py` 会校验清单与校验和。后续新增预设按同样方式扩充目录即可，无需改代码。
 

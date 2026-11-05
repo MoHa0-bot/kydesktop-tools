@@ -19,11 +19,15 @@ sp1-2203 / 2303 / 2403 / 2503 各 x86、arm64 一台。已去重：
 2203 / 2303 的 archive2 走 `DEB/KYLIN_DEB` 入口且无 bugfix-limit suite；
 2503 实际使用 `10.1-2503-bugfix` suite、Pin-Priority 为 550 一档。
 
+2026-11 新增 4 条「现场实测」预设：两台 V10 (juniper) 虚拟机（2107 / 0710，
+配置一致合并为 `v10-2107-实机`）和三台麒麟 990 Wayland 主机
+（`wl-2203-990-实机` / `wl-2303u1-990-实机` / `wl-2403u1-990-实机`）。
+
 预设只是模板：创建成 profile 后可以自由查看、编辑。
 `docs/kylin-desktop-sources.md` 保存原始清单，`tests/test_presets.py` 会校验
 预设源行与清单一致。
 
-总计：45 个预设 / 218 条 `deb` 源行 / 12 条带优先级配置。
+总计：49 个预设 / 230 条 `deb` 源行 / 14 条带优先级配置。
 """
 
 from __future__ import annotations
@@ -595,6 +599,85 @@ PRESETS: Tuple[SourcePreset, ...] = (
         ),
     ),
     # -------------------------------------------------------------
+    # Wayland · 麒麟 990 · 现场实测（主机收集，2026-11）
+    _p(
+        "wl-2203-990-实机",
+        "Wayland 2203 · 麒麟 990（实机）",
+        "Wayland · 麒麟 990",
+        "Wayland 2203 Kirin 990 现场主机实测源（L410 整机）",
+        [
+            "deb %s 10.1-wayland-2203-updates main universe restricted multiverse" % _ARCHS,
+            "deb %s 10.1-kirin990-feature main" % _ARCHS,
+            "deb %s default all" % _KIRIN9A0S,
+        ],
+        architectures=("arm64",),
+        notes=(
+            "数据来自 2026-11 现场主机收集包（wl-2203-990，L410 整机，内核 4.19.71-23-kr990）。",
+            "与官方清单 wl-2203-990 的差异：无 10.1-2203-wayland(-kirin990)-bugfix-limit 两条 suite；机器未配置 preferences。",
+            "现场 sources.list 的 KYLIN-ALL 地址带尾斜杠（与官方清单等价），预设按清单写法收录。",
+        ),
+    ),
+    _p(
+        "wl-2303u1-990-实机",
+        "Wayland 2303-update1 · 麒麟 990（实机）",
+        "Wayland · 麒麟 990",
+        "Wayland 2303update1 Kirin 990 现场主机实测源（含优先级配置）",
+        [
+            "deb %s 10_1-kirin9a0 main all" % _DEB,
+            "deb %s 10.1-kirin990-2303-feature main" % _ARCH,
+            "deb %s 10.1 main restricted universe multiverse" % _ARCH,
+            "deb %s 10.1-wayland-2303-updates main restricted universe multiverse" % _ARCH,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: release a=10_1-kirin9a0",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: release a=10.1-kirin990-2303-feature",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: release a=10.1",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: release a=10.1-wayland-2303-updates",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "数据来自 2026-11 现场主机收集包（wl-2303u1-990，内核 4.19.71-30-kr990）。",
+            "与官方清单 wl-2303-990 的差异：无 10.1-2303-wayland(-kirin990)-bugfix-limit 两条 suite；partner 源走 DEB/KYLIN_DEB 的 10_1-kirin9a0 suite（http）而非 PART 入口（https）。",
+            "现场 preferences.d 的 archive1-4.pref（每条 Pin-Priority 均为 500）如实收录，创建 profile 时写入 preferences.d/kylin.pref。",
+        ),
+    ),
+    _p(
+        "wl-2403u1-990-实机",
+        "Wayland 2403-update1 · 麒麟 990（实机）",
+        "Wayland · 麒麟 990",
+        "Wayland 2403update1 Kirin 990 现场主机实测源（OEM 硬件 suite，含优先级配置）",
+        [
+            "deb %s default all" % _KIRIN9A0S,
+            "deb %s 10.1-2403-wayland-update1-oem-hw-990 main restricted universe multiverse" % _ARCHS,
+        ],
+        preferences=(
+            "Package: *",
+            "Pin: release a=default",
+            "Pin-Priority: 500",
+            "",
+            "Package: *",
+            "Pin: release a=10.1-2403-wayland-update1-oem-hw-990",
+            "Pin-Priority: 500",
+        ),
+        architectures=("arm64",),
+        notes=(
+            "数据来自 2026-11 现场主机收集包（wl-2403u1-990，oem-hw 内核 4.19.71-46-kr990）。",
+            "使用 10.1-2403-wayland-update1-oem-hw-990（OEM 硬件 990 专属 update1 suite），官方清单无对应条目（wl-2403u2-990 为通用 update2 系列）。",
+            "现场仅有 partner 源与该 suite 两条源；preferences.d 的 archive1-2.pref（Pin-Priority 均为 500）如实收录，创建 profile 时写入 preferences.d/kylin.pref。",
+        ),
+    ),
+    # -------------------------------------------------------------
     # Wayland · 麒麟 9006C
     _p(
         "wl-2107-9006c",
@@ -1111,6 +1194,25 @@ PRESETS: Tuple[SourcePreset, ...] = (
         ],
         architectures=("amd64", "arm64", "mips64el"),
         notes=("来自旧版《银河麒麟桌面版软件源地址汇总》；新外网源清单（XC / HWE / Wayland）不再收录 V10 非 SP1（10.0 系），仅在老机器上参考。",)
+    ),
+    # -------------------------------------------------------------
+    # V10 基础版（非 SP1，历史）· 现场实测（虚拟机收集，2026-11）
+    _p(
+        "v10-2107-实机",
+        "V10-2107 / 0710（实机）",
+        "V10 基础版（非 SP1，历史）",
+        "V10 非 SP1 虚拟机实测源（源管理器标准配置）",
+        [
+            "deb %s 10.0-fixs main" % _ARCH,
+            "deb %s V10 main all" % _DEB,
+            "deb %s 10.0 main universe multiverse restricted" % _ARCH,
+        ],
+        architectures=("amd64",),
+        notes=(
+            "数据来自 2026-11 两台 V10 (juniper) 虚拟机收集包（V10-2107 与 V10-0710，内核分别为 4.4.131-20210817 / 4.4.131-20200710），配置一致合并为一条。",
+            "与历史预设 v10-2107 的差异：无 archive.kylinos.cn/kylin/partner juniper 源；archive2 走 DEB/KYLIN_DEB 的 V10 suite。",
+            "机器未配置 preferences。",
+        ),
     ),
 )
 

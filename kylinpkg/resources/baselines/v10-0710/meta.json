@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "v10-0710",
+  "created_at": "2026-11-05T11:34:34+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 V10-0710_kylinpkg-bundle-kylin-virtual-machine-20261105-113434.tar.gz"
+  },
+  "note": "V10 (juniper) 0710 amd64 虚拟机，源配置对应预设 v10-2107-实机",
+  "status_sha256": "a05c1158e660a4c7827b97573d9b892d52e4398a270284a20b458b6fcb246c1c",
+  "status_size": 1787696,
+  "package_count": 1769,
+  "installed_count": 1768,
+  "architectures": [
+    "amd64"
+  ],
+  "warnings": [],
+  "source_bundle": "V10-0710_kylinpkg-bundle-kylin-virtual-machine-20261105-113434.tar.gz",
+  "builtin": true,
+  "kernel_version": "4.4.131-20200710-generic",
+  "kernel_versions": {
+    "kylin-image-4.4.131-20200710-generic": "4.4.131-20200710-generic"
+  }
+}

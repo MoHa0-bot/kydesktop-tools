@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "wl-2303u1-990",
+  "created_at": "2026-11-05T11:23:09+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 wl-2303u1-990_kylinpkg-bundle-kylin-pc-20261105-112309.tar.gz"
+  },
+  "note": "V10 SP1 2303 arm64 麒麟990 Wayland，源配置对应预设 wl-2303u1-990-实机",
+  "status_sha256": "15cb355e0269e6162b9f595d842eac53a31359d61faeb20e85cf207d8b63332b",
+  "status_size": 1800253,
+  "package_count": 1867,
+  "installed_count": 1867,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "wl-2303u1-990_kylinpkg-bundle-kylin-pc-20261105-112309.tar.gz",
+  "builtin": true,
+  "kernel_version": "4.19.71-30-kr990",
+  "kernel_versions": {
+    "linux-image-4.19.71-30-kr990": "4.19.71-30-kr990"
+  }
+}

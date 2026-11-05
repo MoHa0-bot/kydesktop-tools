@@ -317,7 +317,7 @@ class App:
         self.baseline_tree = self._make_tree(
             frame,
             ("name", "arch", "kernel", "origin"),
-            ("名称", "架构", "内核(linux-generic)", "来源"),
+            ("名称", "架构", "内核", "来源"),
             (170, 100, 150, 80),
         )
         self.baseline_tree.bind("<<TreeviewSelect>>", self._on_baseline_select)

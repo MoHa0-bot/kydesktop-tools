@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "wl-2203-990",
+  "created_at": "2026-11-05T10:40:54+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 wl-2203-990_kylinpkg-bundle-kylin-L410-20261105-104054.tar.gz"
+  },
+  "note": "V10 SP1 2203 arm64 麒麟990 Wayland（L410 整机），源配置对应预设 wl-2203-990-实机",
+  "status_sha256": "a07b08f2f7f3cd53362708b3b73bb103a742f606f4907424f2c27fcf95e02b93",
+  "status_size": 1663025,
+  "package_count": 1702,
+  "installed_count": 1702,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "wl-2203-990_kylinpkg-bundle-kylin-L410-20261105-104054.tar.gz",
+  "builtin": true,
+  "kernel_version": "4.19.71-23-kr990",
+  "kernel_versions": {
+    "linux-image-4.19.71-23-kr990": "4.19.71-23-kr990"
+  }
+}

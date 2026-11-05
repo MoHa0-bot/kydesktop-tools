@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "name": "wl-2403u1-990",
+  "created_at": "2026-11-05T10:23:22+08:00",
+  "origin": {
+    "kind": "builtin",
+    "detail": "收集包 wl-2403u1-990_kylinpkg-bundle-kylin-pc-20261105-102322.tar.gz"
+  },
+  "note": "V10 SP1 2403 arm64 麒麟990 Wayland（oem-hw 内核），源配置对应预设 wl-2403u1-990-实机",
+  "status_sha256": "3d3ba0439394885948bf6aade761e4724f138afcfb171ac928ef38a6ff72f54f",
+  "status_size": 1951619,
+  "package_count": 2000,
+  "installed_count": 2000,
+  "architectures": [
+    "arm64"
+  ],
+  "warnings": [],
+  "source_bundle": "wl-2403u1-990_kylinpkg-bundle-kylin-pc-20261105-102322.tar.gz",
+  "builtin": true,
+  "kernel_version": "4.19.71-46-kr990",
+  "kernel_versions": {
+    "linux-image-4.19.71-46-kr990": "4.19.71-46-kr990"
+  }
+}

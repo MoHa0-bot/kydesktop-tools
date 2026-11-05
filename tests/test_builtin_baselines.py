@@ -19,7 +19,27 @@ EXPECTED_NAMES = [
     "sp1-2403-x86",
     "sp1-2503-arm64",
     "sp1-2503-x86",
+    "v10-0710",
+    "v10-2107",
+    "wl-2203-990",
+    "wl-2303u1-990",
+    "wl-2403u1-990",
 ]
+
+EXPECTED_KERNELS = {
+    "sp1-2203-x86": "5.4.18.53.42",
+    "sp1-2303-arm64": "5.4.18.85.74",
+    "sp1-2303-x86": "5.4.18.85.74",
+    "sp1-2403-arm64": "5.4.18.110.99",
+    "sp1-2403-x86": "5.4.18.110.99",
+    "sp1-2503-arm64": "5.4.18.142.131",
+    "sp1-2503-x86": "5.4.18.142.131",
+    "v10-0710": "4.4.131-20200710-generic",
+    "v10-2107": "4.4.131-20210817-generic",
+    "wl-2203-990": "4.19.71-23-kr990",
+    "wl-2303u1-990": "4.19.71-30-kr990",
+    "wl-2403u1-990": "4.19.71-46-kr990",
+}
 
 
 class BuiltinBaselinesTest(unittest.TestCase):
@@ -34,8 +54,11 @@ class BuiltinBaselinesTest(unittest.TestCase):
             self.assertTrue(item.get("source_bundle"), item["name"])
             self.assertTrue(item.get("status_sha256"), item["name"])
             self.assertTrue(item.get("note"), item["name"])
-            # 内核元包版本列：内置基线必须能给出 linux-generic 版本
-            self.assertRegex(str(item.get("kernel_version", "")), r"^5\.", item["name"])
+            # 内核列：内置基线必须能给出内核版本（linux-generic 元包或镜像包回退）
+            self.assertRegex(str(item.get("kernel_version", "")), r"^\d", item["name"])
+            self.assertEqual(
+                str(item.get("kernel_version", "")), EXPECTED_KERNELS[item["name"]], item["name"]
+            )
 
     def test_status_gz_matches_meta(self):
         items = baseline_mod.list_builtin_baselines()
@@ -116,10 +139,10 @@ class BuiltinBaselinesTest(unittest.TestCase):
             state = State(Path(tmp) / "state").ensure()
             created = baseline_mod.ensure_builtin_baselines(state)
             self.assertEqual(sorted(created), sorted(EXPECTED_NAMES))
-            self.assertEqual(len(baseline_mod.list_baselines(state)), 7)
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 12)
             # 幂等：再次调用不重复导入
             self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
-            self.assertEqual(len(baseline_mod.list_baselines(state)), 7)
+            self.assertEqual(len(baseline_mod.list_baselines(state)), 12)
             # 用户删除后不再自动恢复（同步标记已记录）
             baseline_mod.remove_baseline(state, "sp1-2203-x86")
             self.assertEqual(baseline_mod.ensure_builtin_baselines(state), [])
@@ -157,14 +180,57 @@ class KernelVersionTest(unittest.TestCase):
     )
 
     def test_extract_installed_kernel_metapackage(self):
+        # linux-generic 元包存在时优先取元包，忽略镜像包
         kv = baseline_mod.kernel_versions_from_status(self.STATUS.encode("utf-8"))
         self.assertEqual(kv, {"linux-generic": "5.4.18.142.131"})
         self.assertEqual(baseline_mod.kernel_display(kv), "5.4.18.142.131")
 
-    def test_not_installed_or_non_metapackage_ignored(self):
-        text = self.STATUS.replace("install ok installed\nVersion: 5.4.18.142.131", "deinstall ok config-files\nVersion: 5.4.18.142.131")
+    def test_image_fallback_when_metapackage_not_installed(self):
+        # linux-generic 被卸载时回退到带版本号的内核镜像包（版本取自包名）
+        text = self.STATUS.replace(
+            "install ok installed\nVersion: 5.4.18.142.131",
+            "deinstall ok config-files\nVersion: 5.4.18.142.131",
+        )
+        kv = baseline_mod.kernel_versions_from_status(text.encode("utf-8"))
+        self.assertEqual(kv, {"linux-image-5.4.0-1-generic": "5.4.0-1-generic"})
+        self.assertEqual(baseline_mod.kernel_display(kv), "5.4.0-1-generic")
+
+    def test_not_installed_ignored(self):
+        # 元包与镜像包均未安装时不显示内核
+        text = self.STATUS.replace(
+            "install ok installed\nVersion: 5.4.18.142.131",
+            "deinstall ok config-files\nVersion: 5.4.18.142.131",
+        ).replace(
+            "install ok installed\nVersion: 5.4.0-1",
+            "deinstall ok config-files\nVersion: 5.4.0-1",
+        )
         self.assertEqual(baseline_mod.kernel_versions_from_status(text.encode("utf-8")), {})
         self.assertEqual(baseline_mod.kernel_display({}), "-")
+
+    def test_kylin_image_fallback_skips_extra_and_unversioned(self):
+        # V10 基础版（juniper）的 kylin-image-* 镜像包；
+        # 附件包 extra-… 与无版本号的平台元包（linux-image-kr990）不收录
+        status = (
+            "Package: kylin-image-4.4.131-20200710-generic\n"
+            "Status: install ok installed\n"
+            "Version: 4.4.131-20200710.1\n"
+            "\n"
+            "Package: kylin-image-extra-4.4.131-20200710-generic\n"
+            "Status: install ok installed\n"
+            "Version: 4.4.131-20200710.1\n"
+            "\n"
+            "Package: linux-image-kr990\n"
+            "Status: install ok installed\n"
+            "Version: 4.19.71.30.27b1\n"
+            "\n"
+        )
+        kv = baseline_mod.kernel_versions_from_status(status.encode("utf-8"))
+        self.assertEqual(
+            kv, {"kylin-image-4.4.131-20200710-generic": "4.4.131-20200710-generic"}
+        )
+        self.assertEqual(
+            baseline_mod.kernel_display(kv), "4.4.131-20200710-generic"
+        )
 
     def test_hwe_variant_shown_with_name(self):
         kv = {"linux-generic": "5.4.0.1", "linux-generic-hwe-20.04": "5.10.0.2"}

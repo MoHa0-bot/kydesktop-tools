@@ -12,7 +12,7 @@ from kylinpkg.util import KylinPkgError
 
 class PresetsTest(unittest.TestCase):
     def test_catalog_is_parseable_and_unique(self):
-        self.assertEqual(len(presets.PRESETS), 45)
+        self.assertEqual(len(presets.PRESETS), 49)
         ids = [item.id for item in presets.PRESETS]
         self.assertEqual(len(ids), len(set(ids)))
         for item in presets.PRESETS:
@@ -32,8 +32,8 @@ class PresetsTest(unittest.TestCase):
             line.strip() for line in text.splitlines() if line.strip().startswith("deb ")
         ]
         preset_lines = [line for item in presets.PRESETS for line in item.sources]
-        self.assertEqual(len(md_lines), 218)
-        self.assertEqual(len(preset_lines), 218)
+        self.assertEqual(len(md_lines), 230)
+        self.assertEqual(len(preset_lines), 230)
 
         def normalize(line):
             return " ".join(line.split())
@@ -63,8 +63,9 @@ class PresetsTest(unittest.TestCase):
         )
         self.assertEqual(len(presets.list_presets("XC 产线（通用版）")), 9)
         self.assertEqual(len(presets.list_presets("HWE 硬件启用栈")), 10)
+        self.assertEqual(len(presets.list_presets("V10 基础版（非 SP1，历史）")), 3)
         self.assertEqual(
-            sum(1 for item in presets.PRESETS if item.group.startswith("Wayland")), 24
+            sum(1 for item in presets.PRESETS if item.group.startswith("Wayland")), 27
         )
 
     def test_specific_presets(self):
@@ -102,9 +103,19 @@ class PresetsTest(unittest.TestCase):
         self.assertIn("10.0", "\n".join(legacy.sources))
         self.assertTrue(any("旧版" in note for note in legacy.notes))
 
+        # 2026-11 现场实测预设（V10 虚拟机 + 麒麟 990 Wayland）
+        v10field = presets.get_preset("v10-2107-实机")
+        self.assertEqual(len(v10field.sources), 3)
+        self.assertIn("deb http://archive2.kylinos.cn/DEB/KYLIN_DEB V10 main all", v10field.sources)
+        wl2403 = presets.get_preset("wl-2403u1-990-实机")
+        self.assertEqual(len(wl2403.sources), 2)
+        self.assertIn("10.1-2403-wayland-update1-oem-hw-990", "\n".join(wl2403.sources))
+        wl2303 = presets.get_preset("wl-2303u1-990-实机")
+        self.assertIn("deb http://archive2.kylinos.cn/DEB/KYLIN_DEB 10_1-kirin9a0 main all", wl2303.sources)
+
     def test_preferences_are_recorded(self):
         with_pin = [item.id for item in presets.PRESETS if item.preferences]
-        self.assertEqual(len(with_pin), 12)
+        self.assertEqual(len(with_pin), 14)
         for preset_id in (
             "xc-2503",
             "xc-2503-实机",
@@ -118,6 +129,8 @@ class PresetsTest(unittest.TestCase):
             "wl-pangux-b",
             "wl-flemingx",
             "wl-panguy",
+            "wl-2303u1-990-实机",
+            "wl-2403u1-990-实机",
         ):
             self.assertIn(preset_id, with_pin)
         # 每条优先级配置都必须是合法的 Pin 段落
