@@ -323,9 +323,13 @@ class App:
         self.baseline_tree.bind("<<TreeviewSelect>>", self._on_baseline_select)
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=(6, 0))
+        self._add_action_button(buttons, "查看包信息", self._baseline_viewer_dialog)
         self._add_action_button(buttons, "导入 status 文件", self._baseline_import_dialog)
         self._add_action_button(buttons, "从本机导入", self._quick_import_baseline_system)
         self._add_action_button(buttons, "删除", self._delete_baseline)
+        self.baseline_tree.bind(
+            "<Double-1>", lambda _event: self._baseline_viewer_dialog()
+        )
 
     def _add_action_button(self, parent: tk.Widget, text: str, command: Callable) -> ttk.Button:
         button = ttk.Button(parent, text=text, command=command)
@@ -889,6 +893,290 @@ class App:
             side="right"
         )
         self._center_dialog(win)
+        self._make_modal(win)
+
+    def _baseline_viewer_dialog(self, name: str = "") -> None:
+        """打开 baseline 查看器：搜索包、查看完整 status 段落、复制/导出筛选结果。"""
+        selection = self.baseline_tree.selection()
+        target = name or (selection[0] if selection else "")
+        if not target:
+            messagebox.showinfo("提示", "请先选择一个 baseline", parent=self.root)
+            return
+
+        state_names = {
+            str(meta.get("name")) for meta in baseline_mod.list_baselines(self.state)
+        }
+        name_by_label: Dict[str, tuple] = {}
+        labels: List[str] = []
+        for item in baseline_mod.list_baselines(self.state):
+            label = str(item.get("name"))
+            name_by_label[label] = (label, False)
+            labels.append(label)
+        for item in baseline_mod.list_builtin_baselines():
+            label = str(item.get("name"))
+            if label in state_names:
+                continue
+            shown = label + "（内置）"
+            name_by_label[shown] = (label, True)
+            labels.append(shown)
+        initial_label = target if target in name_by_label else target + "（内置）"
+        if initial_label not in name_by_label:
+            initial_label = labels[0] if labels else target
+
+        win = tk.Toplevel(self.root)
+        win.title("查看 dpkg 基线 - %s" % target)
+        win.transient(self.root)
+        viewer_height = 700
+        win.geometry("1080x%d" % viewer_height)
+        win.columnconfigure(0, weight=1)
+        win.rowconfigure(2, weight=1)
+
+        top = ttk.Frame(win, padding=(10, 8, 10, 2))
+        top.grid(row=0, column=0, sticky="ew")
+        ttk.Label(top, text="基线：").pack(side="left")
+        combo_var = tk.StringVar(value=initial_label)
+        combo = ttk.Combobox(
+            top, textvariable=combo_var, values=labels, state="readonly", width=30
+        )
+        combo.pack(side="left", padx=(0, 10))
+        combo.bind("<<ComboboxSelected>>", lambda _event: load_baseline())
+        info_var = tk.StringVar(value="")
+        ttk.Label(
+            top, textvariable=info_var, foreground="#555555", wraplength=780, anchor="w"
+        ).pack(side="left", fill="x", expand=True)
+
+        search = ttk.Frame(win, padding=(10, 2, 10, 4))
+        search.grid(row=1, column=0, sticky="ew")
+        search_var = tk.StringVar()
+        installed_var = tk.BooleanVar(value=False)
+        all_fields_var = tk.BooleanVar(value=False)
+        ttk.Label(search, text="搜索包：").pack(side="left")
+        ttk.Entry(search, textvariable=search_var, width=30).pack(
+            side="left", padx=(0, 10)
+        )
+        ttk.Checkbutton(
+            search, text="仅已安装", variable=installed_var,
+            command=lambda: apply_filter(),
+        ).pack(side="left", padx=(0, 8))
+        ttk.Checkbutton(
+            search, text="搜索全部字段", variable=all_fields_var,
+            command=lambda: apply_filter(),
+        ).pack(side="left")
+        ttk.Label(
+            search, text="包名/版本/架构/状态，勾选后可搜 Depends、Description",
+            style="Hint.TLabel",
+        ).pack(side="left", padx=(10, 0))
+
+        body = ttk.Frame(win, padding=(10, 0, 10, 4))
+        body.grid(row=2, column=0, sticky="nsew")
+        body.columnconfigure(0, weight=3)
+        body.columnconfigure(1, weight=2)
+        body.rowconfigure(0, weight=1)
+
+        left = ttk.Frame(body)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        left.rowconfigure(0, weight=1)
+        left.columnconfigure(0, weight=1)
+        tree = ttk.Treeview(
+            left,
+            columns=("package", "version", "arch", "status"),
+            show="headings",
+            height=14,
+            selectmode="browse",
+        )
+        for col, heading, width in (
+            ("package", "软件包", 170),
+            ("version", "版本", 150),
+            ("arch", "架构", 70),
+            ("status", "状态", 110),
+        ):
+            tree.heading(col, text=heading)
+            # 固定版本/架构/状态列宽，只让包名列吸收多余空间，
+            # 避免窄窗口下状态列被压缩成竖排文字
+            tree.column(
+                col, width=width, minwidth=width, stretch=(col == "package")
+            )
+        vsb = ttk.Scrollbar(left, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+
+        right = ttk.LabelFrame(body, text="包信息（原始 status 段落）", padding=6)
+        right.grid(row=0, column=1, sticky="nsew")
+        right.rowconfigure(0, weight=1)
+        right.columnconfigure(0, weight=1)
+        detail = tk.Text(
+            right, wrap="none", font="TkFixedFont", width=50, height=14, state="disabled"
+        )
+        dysb = ttk.Scrollbar(right, orient="vertical", command=detail.yview)
+        dxsb = ttk.Scrollbar(right, orient="horizontal", command=detail.xview)
+        detail.configure(yscrollcommand=dysb.set, xscrollcommand=dxsb.set)
+        detail.grid(row=0, column=0, sticky="nsew")
+        dysb.grid(row=0, column=1, sticky="ns")
+        dxsb.grid(row=1, column=0, sticky="ew")
+
+        bottom = ttk.Frame(win, padding=(10, 0, 10, 10))
+        bottom.grid(row=3, column=0, sticky="ew")
+        count_var = tk.StringVar(value="")
+        ttk.Label(bottom, textvariable=count_var, anchor="w").pack(
+            side="left", fill="x", expand=True
+        )
+
+        max_rows = 500
+        current: Dict[str, object] = {
+            "name": target, "records": [], "filtered": [],
+        }
+        visible: Dict[str, Dict[str, object]] = {}
+
+        def selected_record() -> Optional[Dict[str, object]]:
+            rows = tree.selection()
+            return visible.get(rows[0]) if rows else None
+
+        def show_detail(_event=None) -> None:
+            record = selected_record()
+            detail.configure(state="normal")
+            detail.delete("1.0", "end")
+            if record:
+                detail.insert(
+                    "1.0",
+                    "软件包：%s   版本：%s   架构：%s   状态：%s\n%s\n\n%s"
+                    % (
+                        record["package"],
+                        record["version"] or "-",
+                        record["architecture"],
+                        record["status"] or "-",
+                        "-" * 60,
+                        record["raw"],
+                    ),
+                )
+            else:
+                detail.insert("1.0", "选择左侧包记录查看完整 status 段落")
+            detail.configure(state="disabled")
+
+        def apply_filter() -> None:
+            filtered = baseline_mod.filter_records(
+                list(current["records"] or []),
+                keyword=search_var.get(),
+                installed_only=bool(installed_var.get()),
+                all_fields=bool(all_fields_var.get()),
+            )
+            current["filtered"] = filtered
+            tree.delete(*tree.get_children())
+            visible.clear()
+            for index, record in enumerate(filtered[:max_rows]):
+                iid = str(index)
+                tree.insert(
+                    "",
+                    "end",
+                    iid=iid,
+                    values=(
+                        record["package"],
+                        record["version"] or "-",
+                        record["architecture"],
+                        "已安装" if record["installed"] else (record["status"] or "-"),
+                    ),
+                )
+                visible[iid] = record
+            extra = (
+                "；仅显示前 %d 条，请细化搜索关键字" % max_rows
+                if len(filtered) > max_rows
+                else ""
+            )
+            count_var.set(
+                "共 %d 条记录，匹配 %d 条%s"
+                % (len(current["records"] or []), len(filtered), extra)
+            )
+            if visible:
+                tree.selection_set("0")
+            show_detail()
+
+        def load_baseline() -> None:
+            label = combo_var.get()
+            real, force_builtin = name_by_label.get(label, (label, False))
+            try:
+                data = baseline_mod.open_baseline(
+                    self.state, str(real), use_builtin=bool(force_builtin)
+                )
+            except KylinPkgError as exc:
+                messagebox.showerror("无法打开", str(exc), parent=win)
+                return
+            meta = data["meta"] or {}
+            current["name"] = str(real)
+            current["records"] = list(data["records"] or [])
+            win.title("查看 dpkg 基线 - %s" % real)
+            source = "内置基线（只读）" if data["source"] == "builtin" else "本机状态目录"
+            info_var.set(
+                "来源：%s   记录 %s 条   已安装 %s   架构 %s   内核 %s"
+                % (
+                    source,
+                    len(current["records"] or []),
+                    meta.get("installed_count", "-"),
+                    ",".join(str(a) for a in meta.get("architectures") or []) or "-",
+                    meta.get("kernel_version", "-"),
+                )
+            )
+            apply_filter()
+
+        def copy_record() -> None:
+            record = selected_record()
+            if not record:
+                messagebox.showinfo("提示", "请先选择一条包记录", parent=win)
+                return
+            try:
+                win.clipboard_clear()
+                win.clipboard_append(str(record["raw"]))
+            except tk.TclError as exc:
+                messagebox.showerror("复制失败", str(exc), parent=win)
+                return
+            self.status_var.set("已复制 %s 的 status 段落" % record["package"])
+
+        def export_filtered() -> None:
+            filtered = list(current["filtered"] or [])
+            if not filtered:
+                messagebox.showinfo("提示", "当前筛选结果为空", parent=win)
+                return
+            path = filedialog.asksaveasfilename(
+                parent=win,
+                title="导出筛选结果",
+                defaultextension=".txt",
+                initialfile="kylinpkg-%s-query.txt" % current["name"],
+                filetypes=[("文本文件", "*.txt"), ("所有文件", "*.*")],
+            )
+            if not path:
+                return
+            try:
+                Path(path).write_text(
+                    "\n\n".join(str(record["raw"]) for record in filtered) + "\n",
+                    encoding="utf-8",
+                )
+            except OSError as exc:
+                messagebox.showerror("导出失败", str(exc), parent=win)
+                return
+            self._append_log("已导出 %d 条包记录：%s" % (len(filtered), path))
+            self.status_var.set("已导出 %d 条包记录" % len(filtered))
+
+        tree.bind("<<TreeviewSelect>>", show_detail)
+        search_var.trace_add("write", lambda *_args: apply_filter())
+        ttk.Button(bottom, text="复制包信息", command=copy_record).pack(
+            side="right", padx=(6, 0)
+        )
+        ttk.Button(bottom, text="导出筛选结果", command=export_filtered).pack(
+            side="right", padx=(6, 0)
+        )
+        ttk.Button(
+            bottom, text="关闭",
+            command=lambda: (self._release_grab(win), win.destroy()),
+        ).pack(side="right", padx=(6, 0))
+
+        load_baseline()
+        self._center_dialog(win)
+        # 查看器较高：窗口底部留出任务栏空间，保证复制/导出/关闭按钮可见
+        win.update_idletasks()
+        screen_height = win.winfo_screenheight()
+        y_pos = max(
+            0, min(win.winfo_rooty(), screen_height - viewer_height - 60)
+        )
+        win.geometry("+%d+%d" % (max(0, win.winfo_rootx()), y_pos))
         self._make_modal(win)
 
     def _baseline_import_dialog(self) -> None:

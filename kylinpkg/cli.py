@@ -443,6 +443,87 @@ def cmd_baseline_show(args, state: State) -> int:
     return 0
 
 
+def cmd_baseline_query(args, state: State) -> int:
+    limit = args.limit if args.limit is not None else (0 if args.json else 50)
+    if limit < 0:
+        raise KylinPkgError("--limit 不能为负数（0 表示不限制）")
+    result = baseline_mod.query_baseline(
+        state,
+        args.name,
+        keyword=args.keyword,
+        installed_only=args.installed,
+        arch=args.arch,
+        exact=args.exact,
+        all_fields=args.all_fields,
+        use_builtin=args.use_builtin,
+    )
+    records = list(result["records"] or [])
+    shown = records[:limit] if limit else records
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "name": result["name"],
+                    "source": result["source"],
+                    "meta": result["meta"],
+                    "total": result["total"],
+                    "matched": result["matched"],
+                    "shown": len(shown),
+                    "records": shown,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    source_label = {
+        "state": "本机状态目录",
+        "builtin": "随包内置基线（只读）",
+        "empty": "空基线（全量闭包）",
+    }.get(str(result["source"]), str(result["source"]))
+    meta = result["meta"] or {}
+    print("基线：%s    来源：%s" % (result["name"], source_label))
+    print(
+        "记录：%s 条    已安装：%s    架构：%s    内核：%s    status sha256：%s"
+        % (
+            result["total"],
+            meta.get("installed_count", "-"),
+            ",".join(str(a) for a in meta.get("architectures") or []) or "-",
+            meta.get("kernel_version", "-"),
+            str(meta.get("status_sha256", ""))[:12] or "-",
+        )
+    )
+    if args.raw:
+        if shown:
+            print("\n\n".join(str(rec["raw"]) for rec in shown))
+        else:
+            print("没有匹配的包记录。")
+    else:
+        rows = [
+            [
+                rec["package"],
+                rec["version"] or "-",
+                rec["architecture"],
+                "已安装" if rec["installed"] else (rec["status"] or "-"),
+            ]
+            for rec in shown
+        ]
+        if rows:
+            print(_table(["软件包", "版本", "架构", "状态"], rows))
+        else:
+            print("没有匹配的包记录。")
+    print(
+        "匹配 %s 条，已显示 %s 条%s"
+        % (
+            result["matched"],
+            len(shown),
+            "；用 --limit 0 显示全部" if limit and result["matched"] > len(shown) else "",
+        )
+    )
+    return 0
+
+
 def cmd_baseline_remove(args, state: State) -> int:
     baseline_mod.remove_baseline(state, args.name)
     print("已删除 baseline：%s" % args.name)
@@ -1014,9 +1095,33 @@ def build_parser() -> argparse.ArgumentParser:
     p_blist = p_base_sub.add_parser("list", help="列出 baseline")
     p_blist.set_defaults(func=cmd_baseline_list)
 
-    p_bshow = p_base_sub.add_parser("show", help="查看 baseline 元数据")
+    p_bshow = p_base_sub.add_parser("show", help="查看 baseline 元数据（JSON）")
     p_bshow.add_argument("name")
     p_bshow.set_defaults(func=cmd_baseline_show)
+
+    p_bquery = p_base_sub.add_parser(
+        "query", help="打开并查询 baseline 里的包信息（内置基线未导入也可查询）"
+    )
+    p_bquery.add_argument("name", help="baseline 名称")
+    p_bquery.add_argument("keyword", nargs="?", default="", help="包关键字；省略则列出包记录")
+    p_bquery.add_argument("--exact", action="store_true", help="按包名精确匹配（不区分大小写）")
+    p_bquery.add_argument("--installed", action="store_true", help="只显示已安装（install ok installed）记录")
+    p_bquery.add_argument("--arch", default="", metavar="ARCH", help="按架构过滤，如 amd64 / arm64 / all")
+    p_bquery.add_argument(
+        "--all-fields", action="store_true",
+        help="搜索范围扩展到全部 Deb822 字段（Depends、Description 等）",
+    )
+    p_bquery.add_argument("--raw", action="store_true", help="输出匹配记录的原始 status 段落")
+    p_bquery.add_argument("--json", action="store_true", help="输出 JSON（含完整字段）")
+    p_bquery.add_argument(
+        "--limit", type=int, default=None, metavar="N",
+        help="最多输出 N 条（默认表格 50 条、JSON 不限；0 表示不限制）",
+    )
+    p_bquery.add_argument(
+        "--builtin", dest="use_builtin", action="store_true",
+        help="强制读取随包分发的内置基线，忽略 state 中的同名基线",
+    )
+    p_bquery.set_defaults(func=cmd_baseline_query)
 
     p_brem = p_base_sub.add_parser("remove", help="删除 baseline")
     p_brem.add_argument("name")

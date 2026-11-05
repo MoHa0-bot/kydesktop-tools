@@ -436,6 +436,174 @@ def read_status_paragraphs(state: State, name: str) -> List[Dict[str, str]]:
     return deb822.parse_status_text(text)
 
 
+# ---------------------------------------------------------------------------
+# 打开查询：读取基线里的包记录（CLI baseline query / GUI 查看器共用）
+# ---------------------------------------------------------------------------
+def _split_status_raw(text: str) -> List[str]:
+    """按空行切分 status 原文，保留每个段落的续行格式（与 parse_status_text 顺序对齐）。"""
+    blocks: List[str] = []
+    current: List[str] = []
+    for raw in text.splitlines():
+        line = raw.rstrip("\r")
+        if not line.strip():
+            if current:
+                blocks.append("\n".join(current))
+                current = []
+            continue
+        current.append(line)
+    if current:
+        blocks.append("\n".join(current))
+    return blocks
+
+
+def _render_paragraph(paragraph: Dict[str, str]) -> str:
+    """把字段字典还原成 Deb822 段落（原文片段缺失时的兜底）。"""
+    lines: List[str] = []
+    for key, value in paragraph.items():
+        parts = str(value).split("\n")
+        lines.append("%s: %s" % (key, parts[0]))
+        for line in parts[1:]:
+            lines.append(" " + line if line else " .")
+    return "\n".join(lines)
+
+
+def open_baseline(
+    state: State, name: str, use_builtin: bool = False
+) -> Dict[str, object]:
+    """打开一份 baseline，返回元数据和全部包记录（只读，不修改基线）。
+
+    默认读 state 里的基线；state 中不存在时自动回退到随包分发的内置基线，
+    因此删除过或尚未导入的内置基线也能直接查询。`use_builtin=True` 强制读内置
+    数据（与 state 中的同名基线区分）。记录含包摘要、`fields`（完整 Deb822
+    字段）和 `raw`（原始 status 段落，可直接查看/复制/导出）。
+    """
+    name = validate_name(name, "baseline 名称")
+    if name == RESERVED_EMPTY:
+        return {
+            "name": name,
+            "source": "empty",
+            "meta": load_meta(state, name),
+            "records": [],
+        }
+
+    source = "state"
+    meta: Dict[str, object]
+    status_bytes: bytes
+    use_state = not use_builtin and (state.baseline_dir(name) / "meta.json").is_file()
+    if use_state:
+        meta = load_meta(state, name)
+        path = status_path(state, name)
+        try:
+            status_bytes = path.read_bytes() if path else b""
+        except OSError as exc:
+            raise KylinPkgError("无法读取 baseline %s 的 status：%s" % (name, exc)) from exc
+    else:
+        try:
+            meta = get_builtin_baseline_meta(name)
+            status_bytes = _builtin_status_bytes(name)
+        except KylinPkgError as exc:
+            if use_builtin:
+                raise
+            raise KylinPkgError(
+                "baseline 不存在：%s（也不是随包分发的内置基线）" % name
+            ) from exc
+        source = "builtin"
+
+    text = status_bytes.decode("utf-8", errors="replace")
+    try:
+        paragraphs = deb822.parse_status_text(text)
+    except KylinPkgError as exc:
+        raise KylinPkgError("baseline %s 的 status 不是合法的 Deb822 文本：%s" % (name, exc)) from exc
+    raws = _split_status_raw(text)
+    records: List[Dict[str, object]] = []
+    for index, paragraph in enumerate(paragraphs):
+        status = paragraph.get("Status", "").strip()
+        raw = raws[index] if index < len(raws) else _render_paragraph(paragraph)
+        records.append(
+            {
+                "package": paragraph.get("Package", "").strip(),
+                "version": paragraph.get("Version", "").strip(),
+                "architecture": paragraph.get("Architecture", "").strip() or "all",
+                "status": status,
+                "installed": bool(status) and status.split()[-1] == "installed",
+                "fields": dict(paragraph),
+                "raw": raw,
+            }
+        )
+    return {"name": name, "source": source, "meta": meta, "records": records}
+
+
+def filter_records(
+    records: List[Dict[str, object]],
+    keyword: str = "",
+    installed_only: bool = False,
+    arch: str = "",
+    exact: bool = False,
+    all_fields: bool = False,
+) -> List[Dict[str, object]]:
+    """在内存中过滤包记录：CLI 与 GUI 共用同一套匹配规则。
+
+    - keyword 为空时返回全部（受 installed_only / arch 约束）；
+    - exact 按包名精确匹配（不区分大小写），否则做子串匹配；
+    - all_fields=False 只搜包名/版本/架构/状态，True 时同时搜 Depends、
+      Description 等全部 Deb822 字段值。
+    """
+    needle = (keyword or "").strip().lower()
+    result: List[Dict[str, object]] = []
+    for record in records:
+        if installed_only and not record.get("installed"):
+            continue
+        if arch and str(record.get("architecture", "")) != arch:
+            continue
+        if needle:
+            if exact:
+                if str(record.get("package", "")).lower() != needle:
+                    continue
+            elif all_fields:
+                haystack = " ".join(
+                    [str(record.get("package", ""))]
+                    + [str(value) for value in (record.get("fields") or {}).values()]
+                ).lower()
+                if needle not in haystack:
+                    continue
+            else:
+                haystack = " ".join(
+                    str(record.get(field, ""))
+                    for field in ("package", "version", "architecture", "status")
+                ).lower()
+                if needle not in haystack:
+                    continue
+        result.append(record)
+    return result
+
+
+def query_baseline(
+    state: State,
+    name: str,
+    keyword: str = "",
+    installed_only: bool = False,
+    arch: str = "",
+    exact: bool = False,
+    all_fields: bool = False,
+    use_builtin: bool = False,
+) -> Dict[str, object]:
+    """查询某个 baseline 里的包信息，返回元数据、总数与匹配记录。"""
+    data = open_baseline(state, name, use_builtin=use_builtin)
+    records = list(data["records"] or [])
+    matched = filter_records(
+        records,
+        keyword=keyword,
+        installed_only=installed_only,
+        arch=arch,
+        exact=exact,
+        all_fields=all_fields,
+    )
+    data["total"] = len(records)
+    data["matched"] = len(matched)
+    data["records"] = matched
+    return data
+
+
 def list_baselines(state: State) -> List[Dict[str, object]]:
     items = []
     if not state.baselines_dir.is_dir():

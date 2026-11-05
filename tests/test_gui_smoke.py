@@ -223,6 +223,37 @@ class GuiSmokeTest(unittest.TestCase):
                 root.update()
                 self._assert_no_ellipsis(root)
                 close_dialogs()
+
+                # baseline 查看器：可打开、列出包记录、搜索实时过滤
+                app._baseline_viewer_dialog("b1")
+                root.update()
+                self._assert_no_ellipsis(root)
+                viewer = next(
+                    child
+                    for child in root.winfo_children()
+                    if isinstance(child, tk.Toplevel)
+                )
+                trees = [
+                    widget
+                    for widget in self._walk_widgets(viewer)
+                    if isinstance(widget, ttk.Treeview)
+                ]
+                self.assertEqual(len(trees), 1)
+                self.assertEqual(
+                    [trees[0].item(row, "values")[0] for row in trees[0].get_children()],
+                    ["libc6"],
+                )
+                entries = [
+                    widget
+                    for widget in self._walk_widgets(viewer)
+                    if type(widget) is ttk.Entry
+                ]
+                self.assertEqual(len(entries), 1)
+                entries[0].insert(0, "无匹配关键字")
+                root.update()
+                self.assertEqual(list(trees[0].get_children()), [])
+                close_dialogs()
+
                 app._show_version_dialog(
                     {
                         "package": "p1",

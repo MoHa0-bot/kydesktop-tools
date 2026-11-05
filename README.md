@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.6**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
+当前版本：**0.3.7**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
 
 ## apt 到底依赖哪些信息
 
@@ -57,14 +57,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.6_all.deb
+sudo dpkg -i ./kylinpkg_0.3.7_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.6_all.deb
+sudo dpkg -i ./kylinpkg_0.3.7_all.deb
 ```
 
 安装后的路径：
@@ -99,7 +99,7 @@ GUI 与 CLI 共用同一个状态目录（默认 `~/.local/share/kylinpkg`），
 顶部的 **“任务记录”** 打开下载历史对话框：每次下载（含失败/中断）都会留痕，可查看任务的时间、状态、profile、架构、软件包与输出目录，支持 **重新下载**（按原配置重跑）、**应用到当前参数**（自动填入下载表单，双击记录同效）和删除单条记录。
 
 1. **apt 源配置（profile）**：按钮行保持 `从预设创建`、`从本机导入`、`编辑源配置`、`更多`、`删除` 一行显示；`导入源配置`（自定义 `sources.list`/`sources.list.d`/preferences/keyring/auth.conf）和 `从 rootfs 导入` 收在 **“更多”** 菜单里。支持同名资源的管理和删除。
-2. **dpkg 初始状态（baseline）**：`导入 status 文件` 支持选择目标机的 `/var/lib/dpkg/status`，或从本机/rootfs/空基线导入，并命名保存。
+2. **dpkg 初始状态（baseline）**：`导入 status 文件` 支持选择目标机的 `/var/lib/dpkg/status`，或从本机/rootfs/空基线导入，并命名保存；点 **“查看包信息”** 或双击列表条目可打开查看器，搜索某个包、查看它的完整 status 段落，并复制或导出筛选结果（详见「打开并查询 baseline 里的包」）。
 3. **下载参数**：选择 profile + baseline（或“全量闭包”），填写软件包名（空格或逗号分隔），可用 **“选择版本”** 查看 `apt policy` 里的所有版本；默认勾选 **“下载依赖”**，取消后只下载当前包本身；选择输出目录，然后：
    - `解析计划`：只做依赖求解，在下方日志里显示包清单、版本、大小；
    - `下载`：复用同一套隔离 apt root，执行 `apt-get install --download-only`，校验哈希、生成 `manifest.json`，可选择同时生成离线 apt 源。
@@ -312,6 +312,34 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 > baseline 必须是完整的 `/var/lib/dpkg/status`（含 Version/Architecture/Status/依赖字段）。
 > `dpkg --get-selections` 只有包名和状态，不能用于 apt 依赖求解。
 > 跨架构下载时 baseline 也必须同架构：amd64 的基线不能用于 arm64；此时用 `--full`，或导入 arm64 目标机的 status。
+
+### 打开并查询 baseline 里的包
+
+`baseline list` 只显示元数据（包数、架构、内核、来源）；`baseline query` 可以打开基线，检索里面每一条 dpkg status 记录，查看 `Version`、`Status`、`Depends`、`Description`、`Conffiles` 等完整字段。随包分发的内置基线即使尚未导入（或已被手动删除）也能直接查询，无需先创建副本。
+
+```bash
+# 列出前 50 条记录（--limit 0 输出全部）
+./bin/kylinpkg baseline query sp1-2503-arm64
+
+# 按包名精确查询并输出完整原始 status 段落
+./bin/kylinpkg baseline query sp1-2503-arm64 bash --exact --raw
+
+# 模糊查询、只看已安装、按架构过滤
+./bin/kylinpkg baseline query sp1-2503-arm64 linux --installed --arch arm64 --limit 0
+
+# 搜 Depends / Description 等全部字段（例如找出谁依赖 libtinfo6）
+./bin/kylinpkg baseline query sp1-2503-arm64 libtinfo6 --all-fields
+
+# 机器可读输出：每条记录含 fields（全部字段）与 raw（原始段落）
+./bin/kylinpkg baseline query sp1-2503-arm64 bash --json
+
+# 与 state 中的同名基线区分：强制读随包分发的内置快照
+./bin/kylinpkg baseline query sp1-2503-arm64 bash --builtin
+```
+
+`--exact` 按包名精确匹配（不区分大小写）；不加时按包名/版本/架构/状态做子串匹配；`--installed` 只保留 `install ok installed`；`--arch` 按架构过滤；`--all-fields` 把搜索范围扩展到 `Depends`、`Description` 等字段值。`--raw` 输出原始 Deb822 段落（可直接复制或回灌），`--json` 输出完整字段与原文，二者都可用于脚本二次处理；默认表格最多 50 条，JSON 默认不限制，`--limit N` 可调整（`0` 表示不限）。`baseline show <名称>` 仍只输出基线元数据 JSON，行为不变。
+
+GUI：baseline 面板点 **“查看包信息”**，或双击列表中的基线，打开查看器。顶部下拉可切换任意已导入基线，以及尚未导入的内置基线（标注「（内置）」）；搜索框实时过滤包列表，可勾选 **“仅已安装”** 与 **“搜索全部字段”**；选中一条记录后，右侧显示该包完整的原始 status 段落，底部可 **“复制包信息”**（复制当前记录原文）或 **“导出筛选结果”**（把当前筛选出的所有段落另存为 .txt，便于离线核对）。列表最多显示 500 条，导出包含全部匹配记录，不受显示上限影响。
 
 ### 内置现场基线（`sp1-*` / `v10-*` / `wl-*`，2026-10 / 2026-11 新增）
 
@@ -544,6 +572,7 @@ sudo apt install zlib1g
 # test_bundle 会实际运行 collector 并导入临时状态；
 # test_versions 用本地双版本 deb 仓库验证版本查询、多版本合并和离线源回读；
 # test_no_deps 验证“仅当前包”与完整依赖两种模式；
+# test_baseline_query 验证基线包记录查询、过滤、内置回退与 CLI 输出；
 # test_cache 验证缓存清理不会动 profile/baseline
 python3 -m unittest discover -s tests -v
 

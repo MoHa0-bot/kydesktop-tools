@@ -7,6 +7,14 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.7] - 2026-11-05
+
+- 新增：baseline 支持**打开查询包信息**。CLI 新增 `baseline query <名称> [关键词]`：按包名/版本/架构/状态检索，支持 `--exact`（包名精确匹配）、`--installed`、`--arch`、`--all-fields`（搜 Depends、Description 等全部字段）、`--raw`（原始 Deb822 段落）、`--json`（含完整字段与原文）、`--limit`、`--builtin`；默认表格最多 50 条，JSON 默认不限制。`baseline show` 仍只输出基线元数据 JSON。
+- 新增：查询时若 state 中没有该基线，自动回退到随包分发的内置快照，因此**未导入或已手动删除的内置基线**也能查；`--builtin` 可强制读内置数据，与 state 中的同名基线区分。`kylinpkg/baseline.py` 新增 `open_baseline` / `filter_records` / `query_baseline` 共用接口，包记录同时保留完整字段与原始 status 段落。
+- 新增：GUI 的 dpkg 初始状态面板增加 **“查看包信息”** 按钮，双击基线条目也可打开查看器；对话框可切换已导入基线与内置基线、实时搜索（可勾选仅已安装/搜索全部字段）、在右侧查看选中包的完整原始 status 段落，底部支持 **“复制包信息”** 与 **“导出筛选结果”**（把全部匹配段落另存为 .txt）。列表最多显示 500 条，导出不受显示上限影响。
+- 变更：`README.md` 增加「打开并查询 baseline 里的包」章节与 GUI 说明；新增 `tests/test_baseline_query.py`（7 项：原文保留、各类过滤、内置回退、CLI 表格/原始段落/JSON/参数接线），`tests/test_gui_smoke.py` 补充查看器构建与实时搜索的冒烟校验。
+- 变更：版本号 0.3.6 → 0.3.7，`packaging/README.md` 的 deb 文件名同步，重新生成 PDF 使用手册并构建 deb。
+
 ## [0.3.6] - 2026-11-05
 
 - 新增：基于 2026-11-05 新一批现场收集包新增 4 条「现场实测」源预设与 5 份内置现场基线。预设 45 → 49（新增 `v10-2107-实机` / `wl-2203-990-实机` / `wl-2303u1-990-实机` / `wl-2403u1-990-实机`），源行 218 → 230，带优先级配置的预设 12 → 14（wl-2303u1-990-实机、wl-2403u1-990-实机各带现场 `archive*.pref` 的 Pin-Priority 500 配置）。`docs/kylin-desktop-sources.md` 第九节同步扩充（分 2026-10 / 2026-11 两批说明）。
@@ -257,7 +265,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.6...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.7...HEAD
+[0.3.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.7
 [0.3.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.6
 [0.3.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.5
 [0.3.4]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.4
