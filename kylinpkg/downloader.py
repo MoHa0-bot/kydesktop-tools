@@ -76,10 +76,23 @@ def _existing_fingerprint(manifest: Dict[str, object]) -> Dict[str, object]:
     return result
 
 
+def _profile_fingerprint(fingerprint: Dict[str, object]) -> Dict[str, object]:
+    """追加合并模式下只校验 profile/架构/基线，忽略 requested 包列表。"""
+    return {
+        key: fingerprint[key]
+        for key in ("profile", "architectures", "baseline")
+        if key in fingerprint
+    }
+
+
 def _prepare_output(
-    out_dir: Path, fingerprint: Dict[str, object], force: bool
+    out_dir: Path, fingerprint: Dict[str, object], force: bool, merge: bool = False
 ) -> Optional[Dict[str, object]]:
-    """返回已有且校验通过的 manifest 表示可复用；否则返回 None 继续下载。"""
+    """返回已有且校验通过的 manifest 表示可复用；否则返回 None 继续下载。
+
+    merge=True 时放宽为只校验 profile/架构/基线一致（忽略 requested 差异），
+    允许向同一目录分批补包；三者不一致仍然报错。
+    """
     if not out_dir.exists():
         return None
     if force:
@@ -94,7 +107,16 @@ def _prepare_output(
             return None
         raise KylinPkgError("输出目录非空且不是 kylinpkg 结果：%s（加 --force 覆盖）" % out_dir)
     existing = manifest_mod.read_manifest(out_dir)
-    if _existing_fingerprint(existing) != fingerprint:
+    existing_fp = _existing_fingerprint(existing)
+    if merge:
+        if _profile_fingerprint(existing_fp) != _profile_fingerprint(fingerprint):
+            raise KylinPkgError(
+                "输出目录的 profile/架构/基线不一致，无法追加合并：%s"
+                "（换目录或加 --force）" % out_dir
+            )
+        # 追加合并：不复用 manifest，返回 None 继续下载补齐。
+        return None
+    if existing_fp != fingerprint:
         raise KylinPkgError("输出目录已有不同任务的结果：%s（换目录或加 --force）" % out_dir)
     errors, _warnings = manifest_mod.verify_manifest(out_dir)
     if not errors:
@@ -136,9 +158,24 @@ def download(
     force: bool = False,
     make_repo: bool = False,
     cancel: Optional[CancelToken] = None,
+    merge: bool = False,
 ) -> Dict[str, object]:
-    """下载单个版本计划，并把任务写入历史记录（成功/失败/中断均记录）。"""
+    """下载单个版本计划，并把任务写入历史记录（成功/失败/中断均记录）。
+
+    merge=True 时追加合并到已有输出目录（要求 profile/架构/基线一致）。
+    """
     out_dir = Path(output_dir).expanduser()
+    if merge and len([plan]) == 1:
+        # 单计划走合并：与多计划共用同一套合并下载逻辑，便于统一维护。
+        return _record_and_run(
+            state,
+            [plan],
+            out_dir,
+            force,
+            make_repo,
+            cancel,
+            lambda: _download_multi(state, [plan], out_dir, force, make_repo, cancel, merge=True),
+        )
     return _record_and_run(
         state,
         [plan],
@@ -407,11 +444,15 @@ def download_plans(
     force: bool = False,
     make_repo: bool = False,
     cancel: Optional[CancelToken] = None,
+    merge: bool = False,
 ) -> Dict[str, object]:
-    """多个版本（多个 apt 事务）下载到同一个目录/离线源（带任务历史记录）。"""
+    """多个版本（多个 apt 事务）下载到同一个目录/离线源（带任务历史记录）。
+
+    merge=True 时追加合并到已有输出目录（要求 profile/架构/基线一致）。
+    """
     if not plans:
         raise KylinPkgError("没有可下载的版本计划")
-    if len(plans) == 1:
+    if len(plans) == 1 and not merge:
         return download(state, plans[0], output_dir, force, make_repo, cancel)
     out_dir = Path(output_dir).expanduser()
     return _record_and_run(
@@ -421,7 +462,7 @@ def download_plans(
         force,
         make_repo,
         cancel,
-        lambda: _download_multi(state, plans, out_dir, force, make_repo, cancel),
+        lambda: _download_multi(state, plans, out_dir, force, make_repo, cancel, merge=merge),
     )
 
 
@@ -432,6 +473,7 @@ def _download_multi(
     force: bool = False,
     make_repo: bool = False,
     cancel: Optional[CancelToken] = None,
+    merge: bool = False,
 ) -> Dict[str, object]:
     first = plans[0]
     for plan in plans[1:]:
@@ -451,7 +493,7 @@ def _download_multi(
     if out_dir.exists() and not out_dir.is_dir():
         raise KylinPkgError("输出路径已存在且不是目录：%s" % out_dir)
     ensure_dir(out_dir, 0o755)
-    existing = _prepare_output(out_dir, _plans_fingerprint(plans), force)
+    existing = _prepare_output(out_dir, _plans_fingerprint(plans), force, merge=merge)
     if existing is not None:
         try:
             (out_dir / _PARTIAL_MARKER).unlink()
@@ -473,12 +515,34 @@ def _download_multi(
     atomic_write_text(marker, "partial\n", 0o600)
     before = {path.name for path in debs_dir.glob("*.deb")}
 
+    # 追加合并：读取已有 manifest，保留旧包的标识与请求列表，供下方去重合并。
+    previous_manifest: Optional[Dict[str, object]] = None
+    if merge and out_dir.joinpath("manifest.json").is_file():
+        previous_manifest = manifest_mod.read_manifest(out_dir)
+
     for plan in plans:
         if cancel is not None:
             cancel.check()
         _ensure_plan_files(state, plan, debs_dir, cancel)
 
     unique: Dict[str, PlanEntry] = {}
+    # 旧 manifest 里已有的包（追加合并时），保证同名包匹配到 plan 而非报“计划外”。
+    if previous_manifest is not None:
+        for item in previous_manifest.get("packages") or []:
+            filename = item.get("filename") or ""
+            if not filename:
+                continue
+            unique[filename] = PlanEntry(
+                uri=item.get("uri") or "",
+                filename=filename,
+                size=int(item.get("size") or 0),
+                hash_type="sha256",
+                hash_value=item.get("sha256") or "",
+                package=item.get("package") or "",
+                version=item.get("version") or "",
+                architecture=item.get("architecture") or "",
+                source=item.get("source") or "",
+            )
     for plan in plans:
         for entry in plan.entries:
             previous = unique.get(entry.filename)
@@ -541,6 +605,14 @@ def _download_multi(
         for spec in plan.requested_satisfied:
             if spec not in satisfied:
                 satisfied.append(spec)
+    # 追加合并：保留旧 manifest 已请求的包，避免 requested 被覆盖丢失。
+    if previous_manifest is not None:
+        for spec in previous_manifest.get("requested") or []:
+            if spec not in requested:
+                requested.append(spec)
+        for spec in previous_manifest.get("requested_satisfied") or []:
+            if spec not in satisfied:
+                satisfied.append(spec)
     combined_warnings: List[str] = []
     for plan in plans:
         for warning in plan.warnings:
@@ -564,13 +636,19 @@ def _download_multi(
         warnings.append("没有可用的 .deb，跳过离线源生成")
     manifest = manifest_mod.build_manifest(out_dir, combined, actual)
     manifest["warnings"] = list(manifest.get("warnings") or []) + warnings
-    manifest["version_plans"] = [
+    version_plans = [
         {
             "requested": list(plan.requested),
             "files": sorted({entry.filename for entry in plan.entries}),
         }
         for plan in plans
     ]
+    # 追加合并：把旧 version_plans 一并保留（去重）。
+    if previous_manifest is not None:
+        for item in previous_manifest.get("version_plans") or []:
+            if item not in version_plans:
+                version_plans.append(item)
+    manifest["version_plans"] = version_plans
     manifest_mod.write_manifest(out_dir, manifest)
     try:
         marker.unlink()

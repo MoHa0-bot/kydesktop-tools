@@ -4,7 +4,7 @@
 
 核心特点：所有 apt 操作都在隔离的 `Dir` 里进行，**不会修改本机的 `/etc/apt`、`/var/lib/dpkg`、`/var/lib/apt`**。
 
-当前版本：**0.3.8**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
+当前版本：**0.3.10**。版本记录见 [CHANGELOG.md](CHANGELOG.md)，开发/测试/发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)；PDF 版使用手册见 [docs/kylinpkg-manual.pdf](docs/kylinpkg-manual.pdf) （由 `packaging/build-doc-pdf.py` 从本文件生成，GUI“帮助”菜单可直接打开）。
 
 ## apt 到底依赖哪些信息
 
@@ -57,14 +57,14 @@ cd kydesktop-tools
 从 [Releases](https://github.com/MoHa0-bot/kydesktop-tools/releases) 下载最新 deb 直接安装：
 
 ```bash
-sudo dpkg -i ./kylinpkg_0.3.8_all.deb
+sudo dpkg -i ./kylinpkg_0.3.10_all.deb
 ```
 
 也可以在源码目录自行构建（产物在 `dist/`，不进版本库）：
 
 ```bash
 ./packaging/build-deb.sh
-sudo dpkg -i ./kylinpkg_0.3.8_all.deb
+sudo dpkg -i ./kylinpkg_0.3.10_all.deb
 ```
 
 安装后的路径：
@@ -259,7 +259,7 @@ cat ./preferences | ./bin/kylinpkg profile set sp1-2503 preferences
 
 可编辑文件：`sources.list`、`sources.list.d/*.list|*.sources`、`preferences`、`preferences.d/*`、`auth.conf`、`auth.conf.d/*`。`keyrings/*` 和 `profile.json` 不可编辑。`profile show --raw` 仍可用于一次性打印全部文本文件。
 
-## 两个一等公民
+## 两个核心配置
 
 ### profile：一套 apt 源配置
 

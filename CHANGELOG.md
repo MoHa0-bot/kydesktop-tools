@@ -7,6 +7,31 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.10] - 2026-11-19
+
+### 新增
+
+- GUI 下载参数区新增 **“追加到现有目录”** 复选框（仅在勾选“下载后生成离线 apt 源”时可用）：勾选后向已有输出目录分批补包，只要求 profile/架构/基线一致、不再比对请求包列表，下载后自动合并 manifest 的 `packages`/`requested`/`version_plans` 并重生成离线源索引，解决多次下载到同一目录时“输出目录已有不同任务的结果”的报错。同名包哈希不同、profile/架构/基线不一致时仍报错。`downloader.download`/`download_plans` 新增 `merge` 参数，CLI `download` 新增 `--merge` 选项。
+- GUI 输出目录行新增 **“自动命名”** 按钮：按当前「源配置 + 软件包 + 架构」生成输出目录名（包名去 `:arch`/`=version` 后缀并 slug 化，超 40 字符截断），并写回输出目录输入框。
+
+### 变更
+
+- GUI“包含 Recommends”复选框文案改为 **“包含推荐依赖”**，更直白易懂。
+
+### 测试
+
+- 新增 `tests/test_downloader_merge.py`：覆盖追加合并放宽 requested 指纹、profile/架构/基线不一致仍报错、非合并模式仍拒绝不同请求。
+
+## [0.3.9] - 2026-11-19
+
+### 修复
+
+- GUI 日志区（以及 baseline 查看器详情、源预览等只读文本框）此前处于 `disabled` 状态，无法选中文本，也不能右键或 `Ctrl+C` 复制，导致下载打印的日志难以提取。现在这些只读文本框支持**选中文本、右键菜单复制/全选、`Ctrl+C` / `Ctrl+A`**；无选中时复制光标所在整行。新增 `gui.make_readonly_text_copyable()` 统一接入，`tests/test_gui_smoke.py` 补充只读日志区复制能力的冒烟校验。
+
+### 变更
+
+- README 章节标题「两个一等公民」改为**「两个核心配置」**，措辞更直白易懂，避免编程术语黑话；PDF 使用手册同步重生成。
+
 ## [0.3.8] - 2026-11-19
 
 - 变更：收集脚本 `collector/kylinpkg-collect.sh` 默认输出目录由 `/tmp` 改为**当前用户的桌面**（麒麟 `~/桌面`、通用环境 `~/Desktop`，缺失时回退用户主目录），并把收集文件属主统一交还给真实用户（`sudo`/root 运行时同样生效）；收集完成后结尾新增提示“请将收集文件提交到技术人员，输出位置：…”。脚本 `VERSION` 0.2.6 → 0.2.7，`collector/README.md` 同步更新。
@@ -270,7 +295,9 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.8...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.10...HEAD
+[0.3.10]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.9...v0.3.10
+[0.3.9]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.8...v0.3.9
 [0.3.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.8
 [0.3.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.7
 [0.3.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.6

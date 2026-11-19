@@ -288,6 +288,44 @@ class GuiSmokeTest(unittest.TestCase):
                 if root is not None:
                     root.destroy()
 
+    def test_log_text_copyable(self):
+        """只读日志区在 disabled 状态下仍可选中并复制（右键菜单 / Ctrl+C）。"""
+        from kylinpkg.config import State
+        from kylinpkg.gui import App
+
+        with tempfile.TemporaryDirectory(prefix="kylinpkg-gui-test-") as tmp:
+            state = State(Path(tmp) / "state").ensure()
+            root = None
+            try:
+                root = tk.Tk()
+                root.withdraw()
+                app = App(root, state)
+
+                # 日志区初始为 disabled
+                self.assertEqual(app.log_text.cget("state"), "disabled")
+
+                # 追加日志后仍保持 disabled
+                app._append_log("第一行日志内容")
+                app._append_log("第二行日志内容")
+                root.update()
+                self.assertEqual(app.log_text.cget("state"), "disabled")
+                self.assertIn("第一行日志内容", app.log_text.get("1.0", "end"))
+
+                # disabled 状态下仍能手动选中文本
+                app.log_text.tag_add("sel", "1.0", "1.4")
+                self.assertEqual(
+                    app.log_text.get("sel.first", "sel.last"), "第一行日"
+                )
+
+                # 全选辅助函数可选中全部内容
+                from kylinpkg import gui as gui_module
+
+                gui_module._select_all(app.log_text)
+                self.assertTrue(app.log_text.tag_ranges("sel"))
+            finally:
+                if root is not None:
+                    root.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()

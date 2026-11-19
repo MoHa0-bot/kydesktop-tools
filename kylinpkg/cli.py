@@ -685,11 +685,11 @@ def cmd_download(args, state: State) -> int:
         )
     if len(plans) == 1:
         result = downloader.download(
-            state, plans[0], out_dir, force=args.force, make_repo=args.repo
+            state, plans[0], out_dir, force=args.force, make_repo=args.repo, merge=args.merge
         )
     else:
         result = downloader.download_plans(
-            state, plans, out_dir, force=args.force, make_repo=args.repo
+            state, plans, out_dir, force=args.force, make_repo=args.repo, merge=args.merge
         )
     if result.get("reused") and args.repo:
         repo_mod.build_repo(out_dir)
@@ -956,6 +956,11 @@ def _add_plan_args(parser: argparse.ArgumentParser, with_output: bool = False) -
         parser.add_argument("-o", "--output", help="输出目录")
         parser.add_argument("--repo", action="store_true", help="同时生成离线 apt 源")
         parser.add_argument("--force", action="store_true", help="覆盖已有输出目录")
+        parser.add_argument(
+            "--merge",
+            action="store_true",
+            help="追加合并到已有输出目录（要求 profile/架构/基线一致）",
+        )
         parser.add_argument("--quiet", action="store_true", help="不打印下载计划")
     parser.add_argument("packages", nargs="+", help="软件包名（可带 :arch）")
 

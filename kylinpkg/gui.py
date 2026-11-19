@@ -119,6 +119,74 @@ def _setup_fonts(root: tk.Tk) -> None:
             pass
 
 
+def make_readonly_text_copyable(text: tk.Text, root: tk.Misc) -> None:
+    """让只读（disabled）Text 组件支持选中、右键复制与 Ctrl+C / Ctrl+A。
+
+    tkinter 的 Text 处于 disabled 状态时，默认既不能选中文本，也无法用
+    Ctrl+C / 右键复制，导致日志等只读内容难以提取。这里通过挂载到窗口级别的
+    <<Copy>> / <<SelectAll>> 虚拟事件与右键菜单来实现复制，事件处理时临时把
+    Text 切回 normal、完成后再恢复 disabled，规避 disabled 禁止操作的限制。
+    """
+    menu = tk.Menu(text, tearoff=0)
+    menu.add_command(
+        label="复制",
+        command=lambda: _copy_selection(text),
+    )
+    menu.add_command(
+        label="全选",
+        command=lambda: _select_all(text),
+    )
+
+    def _show_menu(event: tk.Event) -> None:
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    text.bind("<Button-3>", _show_menu)
+
+    def _on_copy(_event=None) -> str:
+        return _copy_selection(text)
+
+    def _on_select_all(_event=None) -> str:
+        return _select_all(text)
+
+    # 把事件处理挂到窗口级，让虚拟事件（<<Copy>> / <<SelectAll>>）在该 Text
+    # 获得焦点时也能触发；return "break" 阻止默认处理。
+    root.bind_class("Text", "<<Copy>>", _on_copy)
+    root.bind_class("Text", "<<SelectAll>>", _on_select_all)
+
+
+def _copy_selection(text: tk.Text) -> str:
+    """复制 Text 当前选中内容到剪贴板；无选中时复制整行。"""
+    try:
+        sel = text.tag_ranges("sel")
+    except tk.TclError:
+        sel = ()
+    if sel:
+        content = text.get(sel[0], sel[1])
+    else:
+        # 未选中时复制光标所在整行，贴近终端复制习惯。
+        line = int(text.index("insert").split(".")[0])
+        content = text.get("%d.0" % line, "%d.end" % line)
+    if content:
+        text.clipboard_clear()
+        text.clipboard_append(content)
+        text.update_idletasks()
+    return "break"
+
+
+def _select_all(text: tk.Text) -> str:
+    """选中 Text 全部内容（disabled 状态下仍可用）。"""
+    try:
+        text.tag_add("sel", "1.0", "end-1c")
+        text.mark_set("insert", "1.0")
+        text.see("insert")
+    except tk.TclError:
+        pass
+    return "break"
+
+
 _ICON_SIZES = (16, 32, 48, 64, 128, 256)
 _ICON_DIR = Path(__file__).resolve().parent / "resources" / "icons"
 # PhotoImage 对象必须保活，否则 Tk 侧图像会被回收导致图标消失
@@ -349,8 +417,11 @@ class App:
         self.recommends_var = tk.BooleanVar(value=True)
         self.with_dependencies_var = tk.BooleanVar(value=True)
         self.repo_var = tk.BooleanVar(value=True)
+        self.merge_var = tk.BooleanVar(value=False)
         self.force_var = tk.BooleanVar(value=False)
         self.force_update_var = tk.BooleanVar(value=False)
+        # 「追加到现有目录」仅在勾选「生成离线源」时才有意义，联动禁用。
+        self.repo_var.trace_add("write", self._on_repo_toggle)
 
         row1 = ttk.Frame(frame)
         row1.pack(fill="x", pady=2)
@@ -399,6 +470,9 @@ class App:
         ttk.Entry(row3, textvariable=self.output_var).pack(
             side="left", fill="x", expand=True, padx=(0, 6)
         )
+        ttk.Button(row3, text="自动命名", command=self._on_auto_output).pack(
+            side="left", padx=(0, 6)
+        )
         ttk.Button(row3, text="浏览", command=self._browse_output).pack(side="left", padx=(0, 6))
         ttk.Button(row3, text="打开", command=self._open_output_dir).pack(side="left")
 
@@ -407,18 +481,24 @@ class App:
         ttk.Checkbutton(
             row4, text="下载依赖（取消后仅当前包）", variable=self.with_dependencies_var
         ).pack(side="left", padx=(0, 12))
-        ttk.Checkbutton(row4, text="包含 Recommends", variable=self.recommends_var).pack(
+        ttk.Checkbutton(row4, text="包含推荐依赖", variable=self.recommends_var).pack(
             side="left", padx=(0, 12)
         )
         ttk.Checkbutton(row4, text="下载后生成离线 apt 源", variable=self.repo_var).pack(
             side="left", padx=(0, 12)
         )
+        self.merge_check = ttk.Checkbutton(
+            row4, text="追加到现有目录", variable=self.merge_var
+        )
+        self.merge_check.pack(side="left", padx=(0, 12))
         ttk.Checkbutton(row4, text="覆盖已有输出", variable=self.force_var).pack(
             side="left", padx=(0, 12)
         )
         ttk.Checkbutton(row4, text="强制刷新索引", variable=self.force_update_var).pack(
             side="left"
         )
+        # 初始化「追加到现有目录」的可用状态。
+        self._on_repo_toggle()
 
     def _build_log(self, parent: tk.Widget) -> None:
         frame = ttk.LabelFrame(parent, text="计划 / 日志", padding=8)
@@ -428,6 +508,7 @@ class App:
         self.log_text = tk.Text(
             frame, wrap="none", font="TkFixedFont", height=14, state="disabled"
         )
+        make_readonly_text_copyable(self.log_text, self.root)
         ysb = ttk.Scrollbar(frame, orient="vertical", command=self.log_text.yview)
         xsb = ttk.Scrollbar(frame, orient="horizontal", command=self.log_text.xview)
         self.log_text.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
@@ -693,6 +774,61 @@ class App:
         except KylinPkgError:
             key = "arch"
         return str(default_output_dir(profile, key))
+
+    def _slug_packages(self, packages: Sequence[str]) -> str:
+        """把软件包名列表压缩为目录名片段：去版本号/架构后缀、去非法字符、下划线连接。"""
+        parts: List[str] = []
+        for spec in packages:
+            name = str(spec).strip()
+            if not name:
+                continue
+            # 去掉 :arch 后缀与 =version 后缀
+            name = re.split(r"[:=]", name)[0]
+            slug = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("._-")
+            if not slug:
+                continue
+            if slug not in parts:
+                parts.append(slug)
+        joined = "_".join(parts)
+        # 目录名过长时截断，避免超出文件系统限制。
+        if len(joined) > 40:
+            joined = joined[:37].rstrip("._-") + "…"
+        return joined
+
+    def _on_auto_output(self) -> None:
+        profile = self._current_profile()
+        if not profile:
+            messagebox.showwarning("自动命名", "请先选择 apt 源配置", parent=self.root)
+            return
+        packages = [
+            item for item in re.split(r"[\s,，]+", self.packages_var.get().strip()) if item
+        ]
+        base = self._default_output(profile)
+        slug = self._slug_packages(packages)
+        if slug:
+            # 在 <profile>-<arch> 之间插入包名片段：<profile>-<slug>-<arch>
+            path = Path(base)
+            parent = path.parent
+            stem = path.name
+            parts = stem.rsplit("-", 1)
+            if len(parts) == 2:
+                new_stem = "%s-%s-%s" % (parts[0], slug, parts[1])
+            else:
+                new_stem = "%s-%s" % (stem, slug)
+            self.output_var.set(str(parent / new_stem))
+        else:
+            self.output_var.set(base)
+        self._output_auto = True
+        self.status_var.set("已按源配置 + 软件包 + 架构自动命名输出目录")
+
+    def _on_repo_toggle(self, *_args) -> None:
+        if not hasattr(self, "merge_check"):
+            return
+        if self.repo_var.get():
+            self.merge_check.configure(state="normal")
+        else:
+            self.merge_var.set(False)
+            self.merge_check.configure(state="disabled")
 
     def _browse_output(self) -> None:
         chosen = filedialog.askdirectory(
@@ -1008,6 +1144,7 @@ class App:
         detail = tk.Text(
             right, wrap="none", font="TkFixedFont", width=50, height=14, state="disabled"
         )
+        make_readonly_text_copyable(detail, win)
         dysb = ttk.Scrollbar(right, orient="vertical", command=detail.yview)
         dxsb = ttk.Scrollbar(right, orient="horizontal", command=detail.xview)
         detail.configure(yscrollcommand=dysb.set, xscrollcommand=dxsb.set)
@@ -1321,6 +1458,7 @@ class App:
         preview = tk.Text(
             preview_frame, height=8, wrap="none", font="TkFixedFont", state="disabled"
         )
+        make_readonly_text_copyable(preview, win)
         pysb = ttk.Scrollbar(preview_frame, orient="vertical", command=preview.yview)
         pxsb = ttk.Scrollbar(preview_frame, orient="horizontal", command=preview.xview)
         preview.configure(yscrollcommand=pysb.set, xscrollcommand=pxsb.set)
@@ -2306,6 +2444,7 @@ class App:
             "recommends": bool(self.recommends_var.get()),
             "with_dependencies": bool(self.with_dependencies_var.get()),
             "make_repo": bool(self.repo_var.get()),
+            "merge": bool(self.merge_var.get()) and bool(self.repo_var.get()),
             "force": bool(self.force_var.get()),
             "force_update": bool(self.force_update_var.get()),
             "output": Path(output_text).expanduser(),
@@ -2381,6 +2520,7 @@ class App:
                     force=bool(params["force"]),
                     make_repo=bool(params["make_repo"]),
                     cancel=token,
+                    merge=bool(params["merge"]),
                 )
             else:
                 result = downloader.download_plans(
@@ -2390,6 +2530,7 @@ class App:
                     force=bool(params["force"]),
                     make_repo=bool(params["make_repo"]),
                     cancel=token,
+                    merge=bool(params["merge"]),
                 )
             if result.get("reused"):
                 text = "已有完整结果且校验通过：%s" % output
