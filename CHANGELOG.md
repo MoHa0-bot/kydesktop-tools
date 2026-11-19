@@ -7,6 +7,11 @@
 
 - 计划中：下载并发/断点续传、图形化 SSH 导入。
 
+## [0.3.8] - 2026-11-19
+
+- 变更：收集脚本 `collector/kylinpkg-collect.sh` 默认输出目录由 `/tmp` 改为**当前用户的桌面**（麒麟 `~/桌面`、通用环境 `~/Desktop`，缺失时回退用户主目录），并把收集文件属主统一交还给真实用户（`sudo`/root 运行时同样生效）；收集完成后结尾新增提示“请将收集文件提交到技术人员，输出位置：…”。脚本 `VERSION` 0.2.6 → 0.2.7，`collector/README.md` 同步更新。
+- 变更：版本号 0.3.7 → 0.3.8，`README.md`、`packaging/README.md` 的 deb 文件名同步，重新生成 PDF 使用手册并构建 deb。
+
 ## [0.3.7] - 2026-11-05
 
 - 新增：baseline 支持**打开查询包信息**。CLI 新增 `baseline query <名称> [关键词]`：按包名/版本/架构/状态检索，支持 `--exact`（包名精确匹配）、`--installed`、`--arch`、`--all-fields`（搜 Depends、Description 等全部字段）、`--raw`（原始 Deb822 段落）、`--json`（含完整字段与原文）、`--limit`、`--builtin`；默认表格最多 50 条，JSON 默认不限制。`baseline show` 仍只输出基线元数据 JSON。
@@ -265,7 +270,8 @@
 
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
-[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.7...HEAD
+[Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.8...HEAD
+[0.3.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.8
 [0.3.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.7
 [0.3.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.6
 [0.3.5]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.5

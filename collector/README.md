@@ -14,16 +14,18 @@ ssh user@target 'sudo bash /tmp/kylinpkg-collect.sh -o /tmp'
 或者直接在目标机上：
 
 ```bash
-sudo bash kylinpkg-collect.sh -o /tmp
-# 输出：/tmp/kylinpkg-bundle-<hostname>-<时间>.tar.gz
+sudo bash kylinpkg-collect.sh
+# 输出：当前用户桌面（麒麟 ~/桌面、通用 ~/Desktop，缺失时回退用户主目录）下的 kylinpkg-bundle-<hostname>-<时间>.tar.gz
 ```
 
 选项：
 
-- `-o, --output DIR`：输出目录，默认 `$TMPDIR` 或 `/tmp`
+- `-o, --output DIR`：输出目录，默认当前用户的桌面（缺失时回退用户主目录）
 - `-n, --name NAME`：收集包名称前缀
 - `--with-auth`：同时收集 `/etc/apt/auth.conf` 与 `auth.conf.d`（含明文凭据，谨慎使用）
 - `-h, --help`
+
+收集完成后会在结尾打印“请将收集文件提交到技术人员，输出位置：…”。
 
 ## 收集内容
 

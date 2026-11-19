@@ -26,8 +26,8 @@
 set -u
 shopt -s nullglob
 
-VERSION="0.2.6"
-OUT_DIR="${TMPDIR:-/tmp}"
+VERSION="0.2.7"
+OUT_DIR=""
 PREFIX=""
 WITH_AUTH=0
 WARNINGS=()
@@ -36,7 +36,7 @@ usage() {
     cat <<'EOF'
 用法: kylinpkg-collect.sh [选项]
 
-  -o, --output DIR   输出目录（默认 $TMPDIR 或 /tmp）
+  -o, --output DIR   输出目录（默认当前用户的桌面，缺失时回退用户主目录）
   -n, --name NAME    收集包名称前缀（默认 kylinpkg-bundle-<host>-<时间>）
       --with-auth    同时收集 /etc/apt/auth.conf 与 auth.conf.d（含明文凭据）
   -h, --help         显示帮助
@@ -61,6 +61,29 @@ while [ $# -gt 0 ]; do
             echo "未知参数：$1" >&2; usage >&2; exit 1 ;;
     esac
 done
+
+# 确定真实用户（sudo 运行时用 SUDO_USER 反推，否则用当前用户）
+if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+    REAL_USER="$SUDO_USER"
+elif [ -n "${USER:-}" ] && [ "$USER" != "root" ]; then
+    REAL_USER="$USER"
+else
+    REAL_USER="$(logname 2>/dev/null || printf '%s' "${USER:-root}")"
+fi
+
+# 未显式指定输出目录时，落到当前用户桌面（麒麟 ~/桌面、通用 ~/Desktop，缺失回退主目录）
+if [ -z "$OUT_DIR" ]; then
+    REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+    [ -n "$REAL_HOME" ] || REAL_HOME="$(eval echo "~$REAL_USER" 2>/dev/null)"
+    [ -n "$REAL_HOME" ] || REAL_HOME="${HOME:-/tmp}"
+    if [ -d "$REAL_HOME/桌面" ]; then
+        OUT_DIR="$REAL_HOME/桌面"
+    elif [ -d "$REAL_HOME/Desktop" ]; then
+        OUT_DIR="$REAL_HOME/Desktop"
+    else
+        OUT_DIR="$REAL_HOME"
+    fi
+fi
 
 for cmd in tar sha256sum dpkg date hostname find sort; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -334,11 +357,9 @@ OUT_FILE="$OUT_DIR/$BUNDLE_NAME.tar.gz"
     exit 1
 }
 chmod 600 "$OUT_FILE"
-# sudo 运行时把输出交还给调用者，否则普通用户 scp 不出去
-if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
-    SUDO_GROUP="$(id -gn "$SUDO_USER" 2>/dev/null || printf '%s' "$SUDO_USER")"
-    chown "$SUDO_USER":"$SUDO_GROUP" "$OUT_FILE" 2>/dev/null || true
-fi
+# 把输出交还给真实用户，否则普通用户无法取用（sudo 或 root 运行时）
+REAL_GROUP="$(id -gn "$REAL_USER" 2>/dev/null || printf '%s' "$REAL_USER")"
+chown "$REAL_USER":"$REAL_GROUP" "$OUT_FILE" 2>/dev/null || true
 if ! tar -tzf "$OUT_FILE" >/dev/null 2>&1; then
     echo "收集包自检失败：$OUT_FILE" >&2
     exit 1
@@ -357,6 +378,9 @@ if [ ${#WARNINGS[@]} -gt 0 ]; then
         echo "    - $warning"
     done
 fi
+echo
+echo "请将收集文件提交到技术人员，输出位置："
+echo "  $OUT_FILE"
 echo
 echo "在下载器上导入："
 echo "  kylinpkg bundle import \"$OUT_FILE\" --profile <名称> --baseline <名称>"
