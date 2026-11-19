@@ -17,20 +17,15 @@
 ### 变更
 
 - GUI“包含 Recommends”复选框文案改为 **“包含推荐依赖”**，更直白易懂。
-
-### 测试
-
-- 新增 `tests/test_downloader_merge.py`：覆盖追加合并放宽 requested 指纹、profile/架构/基线不一致仍报错、非合并模式仍拒绝不同请求。
-
-## [0.3.9] - 2026-11-19
+- README 章节标题「两个一等公民」改为**「两个核心配置」**，措辞更直白易懂，避免编程术语黑话；PDF 使用手册同步重生成。
 
 ### 修复
 
 - GUI 日志区（以及 baseline 查看器详情、源预览等只读文本框）此前处于 `disabled` 状态，无法选中文本，也不能右键或 `Ctrl+C` 复制，导致下载打印的日志难以提取。现在这些只读文本框支持**选中文本、右键菜单复制/全选、`Ctrl+C` / `Ctrl+A`**；无选中时复制光标所在整行。新增 `gui.make_readonly_text_copyable()` 统一接入，`tests/test_gui_smoke.py` 补充只读日志区复制能力的冒烟校验。
 
-### 变更
+### 测试
 
-- README 章节标题「两个一等公民」改为**「两个核心配置」**，措辞更直白易懂，避免编程术语黑话；PDF 使用手册同步重生成。
+- 新增 `tests/test_downloader_merge.py`：覆盖追加合并放宽 requested 指纹、profile/架构/基线不一致仍报错、非合并模式仍拒绝不同请求。
 
 ## [0.3.8] - 2026-11-19
 
@@ -296,8 +291,7 @@
 仓库地址：https://github.com/MoHa0-bot/kydesktop-tools
 
 [Unreleased]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.10...HEAD
-[0.3.10]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.9...v0.3.10
-[0.3.9]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.8...v0.3.9
+[0.3.10]: https://github.com/MoHa0-bot/kydesktop-tools/compare/v0.3.8...v0.3.10
 [0.3.8]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.8
 [0.3.7]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.7
 [0.3.6]: https://github.com/MoHa0-bot/kydesktop-tools/releases/tag/v0.3.6
